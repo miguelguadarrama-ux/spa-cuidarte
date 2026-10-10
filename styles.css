@@ -1,9 +1,9 @@
 :root {
   --bg-cream: #FDFBF7;
   --bg-card: #FFFFFF;
-  --text-dark: #1A2E24;
-  --text-muted: #6B7A72;
-  --accent-green: #1E3A2F;
+  --text-dark: #271a2e;
+  --text-muted: #7a6b78;
+  --accent-green: #3a1e3a;
   --accent-green-light: #E8F0EC;
   --accent-gold: #C9A96E;
   --border-color: #EAE5DE;
@@ -99,15 +99,6 @@ nav a:hover {
   gap: 20px;
 }
 
-.header-actions .phone {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-dark);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .btn-primary {
   background-color: var(--accent-green);
   color: white;
@@ -118,6 +109,7 @@ nav a:hover {
   border: none;
   cursor: pointer;
   transition: background 0.3s, transform 0.2s;
+  font-family: 'Inter', sans-serif;
 }
 
 .btn-primary:hover {
@@ -135,6 +127,7 @@ nav a:hover {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
 }
 
 .btn-outline:hover {
@@ -884,6 +877,44 @@ footer {
   gap: 12px;
 }
 
+/* --- WhatsApp Float --- */
+.whatsapp-float {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  background-color: #25D366;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
+  z-index: 999;
+  transition: transform 0.3s, box-shadow 0.3s;
+  animation: pulse-whatsapp 2s infinite;
+}
+
+.whatsapp-float:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 28px rgba(37, 211, 102, 0.6);
+  color: white;
+}
+
+@keyframes pulse-whatsapp {
+  0% {
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4), 0 0 0 0 rgba(37, 211, 102, 0.5);
+  }
+  70% {
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4), 0 0 0 15px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4), 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
 /* --- Responsive --- */
 @media (max-width: 992px) {
   .hero-grid,
@@ -970,5 +1001,13 @@ footer {
 
   .resumen-cita {
     padding: 24px;
+  }
+
+  .whatsapp-float {
+    width: 54px;
+    height: 54px;
+    font-size: 1.7rem;
+    bottom: 18px;
+    right: 18px;
   }
 }

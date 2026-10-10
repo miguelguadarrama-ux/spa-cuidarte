@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
       fecha.setDate(hoy.getDate() + i);
       const div = document.createElement('div');
       div.classList.add('fecha-item');
-      if (i === 2) div.classList.add('active'); // Selecciona por defecto el tercer día
+      if (i === 2) div.classList.add('active');
       div.dataset.fecha = `${diasSemana[fecha.getDay()]} ${fecha.getDate()} de ${meses[fecha.getMonth()]}`;
       div.innerHTML = `
         <span class="dia">${diasSemana[fecha.getDay()]}</span>
@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function () {
       div.addEventListener('click', () => seleccionarFecha(div));
       fechasGrid.appendChild(div);
     }
-    // Guardar la fecha activa por defecto
     const activa = fechasGrid.querySelector('.fecha-item.active');
     if (activa) fechaSeleccionada = activa.dataset.fecha;
   }
@@ -53,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
     horasDisponibles.forEach((hora, index) => {
       const div = document.createElement('div');
       div.classList.add('hora-item');
-      if (index === 2) div.classList.add('active'); // 12:00 por defecto
+      if (index === 2) div.classList.add('active');
       div.textContent = hora;
       div.dataset.hora = hora;
       div.addEventListener('click', () => seleccionarHora(div));
@@ -88,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   function actualizarResumen() {
-    // Servicio
     const opcion = servicioSelect.options[servicioSelect.selectedIndex];
     if (opcion && opcion.value) {
       servicioActual.nombre = opcion.value;
@@ -135,7 +133,6 @@ document.addEventListener('DOMContentLoaded', function () {
     link.addEventListener('click', (e) => {
       const servicio = link.dataset.servicio;
       if (servicio) {
-        // Buscar la opción en el select y seleccionarla
         for (let i = 0; i < servicioSelect.options.length; i++) {
           if (servicioSelect.options[i].value === servicio) {
             servicioSelect.selectedIndex = i;
@@ -195,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      // Validar campos
       const nombre = document.getElementById('nombre');
       const telefono = document.getElementById('telefono');
       const email = document.getElementById('email');
@@ -204,33 +200,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
       let valido = true;
 
-      // Resetear errores
       [nombre, telefono, email, nombreTarjeta, numeroTarjeta].forEach(campo => {
         if (campo) campo.classList.remove('error');
       });
 
-      // Nombre
       if (!nombre.value.trim()) {
         nombre.classList.add('error');
         valido = false;
       }
-      // Teléfono
       if (!telefono.value.trim() || telefono.value.trim().length < 8) {
         telefono.classList.add('error');
         valido = false;
       }
-      // Email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email.value.trim() || !emailRegex.test(email.value.trim())) {
         email.classList.add('error');
         valido = false;
       }
-      // Servicio
       if (!servicioSelect.value) {
         servicioSelect.classList.add('error');
         valido = false;
       }
-      // Si el método de pago es tarjeta, validar campos de tarjeta
       const metodoPago = document.getElementById('metodoPago').value;
       if (metodoPago === 'Tarjeta de crédito/débito') {
         if (!nombreTarjeta.value.trim()) {
@@ -249,18 +239,14 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      // Simular envío exitoso
       mensajeConfirmacion.classList.add('show');
       mensajeConfirmacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      // Resetear formulario después de 4 segundos
       setTimeout(() => {
         form.reset();
         mensajeConfirmacion.classList.remove('show');
-        // Restaurar resumen y selecciones por defecto
         servicioSelect.selectedIndex = 0;
         servicioActual = { nombre: '', precio: 0, duracion: '' };
-        // Regenerar fechas y horas con los valores por defecto
         generarFechas();
         generarHoras();
         actualizarResumen();
@@ -275,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function () {
   generarHoras();
   actualizarResumen();
 
-  // Escuchar cambios en el select de servicio
   if (servicioSelect) {
     servicioSelect.addEventListener('change', actualizarResumen);
   }
