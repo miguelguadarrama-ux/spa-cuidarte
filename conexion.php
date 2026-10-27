@@ -1,13 +1,15 @@
 <?php
-$servidor = "localhost";
-$usuario = "root";
-$contrasena = "";
-$base_de_datos = "spa_cuidarte";
 
-$conexion = new mysqli($servidor, $usuario, $contrasena, $base_de_datos);
+$dsn = "pgsql:host=ep-patient-breeze-b5e6cx5s-pooler.c-7.us-east-2.aws.neon.tech;dbname=neondb;sslmode=require";
+$usuario = "neondb_owner";
+$contrasena = "npg_kj6suWBPJQz1"; 
 
-if ($conexion->connect_error) {
-    die("Error de conexión: " . $conexion->connect_error);
+try {
+    $conexion = new PDO($dsn, $usuario, $contrasena, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+    ]);
+} catch (PDOException $e) {
+    die("Error de conexión a la base de datos en la nube: " . $e->getMessage());
 }
-
 ?>
