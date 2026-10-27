@@ -26,7 +26,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $filaCliente = $stmt->fetch();
 
         if ($filaCliente) {
-            $id_cliente = $filaCliente['idCliente'];
+            // Nota: En PostgreSQL las columnas sin comillas se guardan en minúsculas (idcliente)
+            $id_cliente = $filaCliente['idCliente'] ?? $filaCliente['idcliente'];
             $update = $conexion->prepare("UPDATE cliente SET nombre = ?, telefono = ? WHERE idCliente = ?");
             $update->execute([$nombre, $telefono, $id_cliente]);
         } else {
@@ -34,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $insert = $conexion->prepare("INSERT INTO cliente (nombre, telefono, correo) VALUES (?, ?, ?) RETURNING idCliente");
             $insert->execute([$nombre, $telefono, $email]);
             $filaNuevo = $insert->fetch();
-            $id_cliente = $filaNuevo['idCliente'];
+            $id_cliente = $filaNuevo['idCliente'] ?? $filaNuevo['idcliente'];
         }
 
         // 2. Obtener el ID y precio del servicio buscando por su nombre
@@ -49,7 +50,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $id_servicio = $datosServicio['id_servicio'];
         $total = $datosServicio['precio'];
-        $anticipo = $total * 0.20; // Corregido el operador de multiplicación
+        
+        // CORREGIDO: Operador de multiplicación (*) en una sola línea
+        $anticipo = $total * 0.20; 
+        
         $id_empleado = 1; // Empleado por defecto
 
         // Usamos la fecha actual o la seleccionada formateada para Postgres (TIMESTAMP)
