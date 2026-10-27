@@ -19,66 +19,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // 1. Verificar si el cliente ya existe por correo
-    $stmt = $conexion->prepare("SELECT idCliente FROM cliente WHERE correo = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $resultadoCliente = $stmt->get_result();
+    try {
+        // 1. Verificar si el cliente ya existe por correo
+        $stmt = $conexion->prepare("SELECT idCliente FROM cliente WHERE correo = ?");
+        $stmt->execute([$email]);
+        $filaCliente = $stmt->fetch();
 
-    if ($filaCliente = $resultadoCliente->fetch_assoc()) {
-        $id_cliente = $filaCliente['idCliente'];
-        $update = $conexion->prepare("UPDATE cliente SET nombre = ?, telefono = ? WHERE idCliente = ?");
-        $update->bind_param("ssi", $nombre, $telefono, $id_cliente);
-        $update->execute();
-    } else {
-        $insert = $conexion->prepare("INSERT INTO cliente (nombre, telefono, correo) VALUES (?, ?, ?)");
-        $insert->bind_param("sss", $nombre, $telefono, $email);
-        $insert->execute();
-        $id_cliente = $conexion->insert_id;
+        if ($filaCliente) {
+            $id_cliente = $filaCliente['idCliente'];
+            $update = $conexion->prepare("UPDATE cliente SET nombre = ?, telefono = ? WHERE idCliente = ?");
+            $update->execute([$nombre, $telefono, $id_cliente]);
+        } else {
+            // En PostgreSQL usamos RETURNING para obtener el ID insertado al instante
+            $insert = $conexion->prepare("INSERT INTO cliente (nombre, telefono, correo) VALUES (?, ?, ?) RETURNING idCliente");
+            $insert->execute([$nombre, $telefono, $email]);
+            $filaNuevo = $insert->fetch();
+            $id_cliente = $filaNuevo['idCliente'];
+        }
+
+        // 2. Obtener el ID y precio del servicio buscando por su nombre
+        $stmtServicio = $conexion->prepare("SELECT id_servicio, precio FROM servicios WHERE nombre = ?");
+        $stmtServicio->execute([$servicio]);
+        $datosServicio = $stmtServicio->fetch();
+
+        if (!$datosServicio) {
+            echo json_encode(["status" => "error", "message" => "El servicio seleccionado no existe en la base de datos."]);
+            exit;
+        }
+
+        $id_servicio = $datosServicio['id_servicio'];
+        $total = $datosServicio['precio'];
+        $anticipo = $total * 0.20; // Corregido el operador de multiplicación
+        $id_empleado = 1; // Empleado por defecto
+
+        // Usamos la fecha actual o la seleccionada formateada para Postgres (TIMESTAMP)
+        $fechaHoraMysql = date('Y-m-d') . ' ' . ($hora ? $hora : '12:00') . ':00';
+
+        // 3. Insertar la Cita (con RETURNING para obtener el id_cita)
+        $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, Fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Pendiente', ?) RETURNING id_cita");
+        $insertCita->execute([$id_cliente, $id_empleado, $fechaHoraMysql, $total]);
+        $filaCita = $insertCita->fetch();
+        $id_cita = $filaCita['id_cita'];
+
+        // 4. Insertar detalle de cita
+        $insertDetalle = $conexion->prepare("INSERT INTO detalle_citas (id_cita, id_servicio, precio_unitario) VALUES (?, ?, ?)");
+        $insertDetalle->execute([$id_cita, $id_servicio, $total]);
+
+        // 5. Registrar el pago del anticipo
+        $insertPago = $conexion->prepare("INSERT INTO pagos (id_cita, monto, metodo_pago) VALUES (?, ?, ?)");
+        $insertPago->execute([$id_cita, $anticipo, $metodoPago]);
+
+        echo json_encode(["status" => "success", "message" => "¡Cita guardada correctamente en la base de datos en la nube!"]);
+
+    } catch (Exception $e) {
+        echo json_encode(["status" => "error", "message" => "Error en el servidor: " . $e->getMessage()]);
     }
-    $stmt->close();
-
-    // 2. Obtener el ID y precio del servicio buscando por su nombre
-    $stmtServicio = $conexion->prepare("SELECT id_servicio, precio FROM servicios WHERE nombre = ?");
-    $stmtServicio->bind_param("s", $servicio);
-    $stmtServicio->execute();
-    $resServicio = $stmtServicio->get_result();
-
-    if (!$datosServicio = $resServicio->fetch_assoc()) {
-        echo json_encode(["status" => "error", "message" => "El servicio seleccionado no existe en la base de datos."]);
-        exit;
-    }
-
-    $id_servicio = $datosServicio['id_servicio'];
-    $total = $datosServicio['precio'];
-    $anticipo = $total * 0.20;
-    $id_empleado = 1; // Empleado por defecto
-
-    $fechaHoraMysql = date('Y-m-d') . ' ' . ($hora ? $hora : '12:00') . ':00';
-
-    // 3. Insertar la Cita
-    $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, Fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Pendiente', ?)");
-    $insertCita->bind_param("iiss", $id_cliente, $id_empleado, $fechaHoraMysql, $total);
-    $insertCita->execute();
-    $id_cita = $conexion->insert_id;
-    $insertCita->close();
-
-    // 4. Insertar detalle de cita
-    $insertDetalle = $conexion->prepare("INSERT INTO detalle_citas (id_cita, id_servicio, precio_unitario) VALUES (?, ?, ?)");
-    $insertDetalle->bind_param("iid", $id_cita, $id_servicio, $total);
-    $insertDetalle->execute();
-    $insertDetalle->close();
-
-    // 5. Registrar el pago del anticipo
-    $insertPago = $conexion->prepare("INSERT INTO pagos (id_cita, monto, metodo_pago) VALUES (?, ?, ?)");
-    $insertPago->bind_param("ids", $id_cita, $anticipo, $metodoPago);
-    $insertPago->execute();
-    $insertPago->close();
-
-    echo json_encode(["status" => "success", "message" => "¡Cita guardada correctamente en la base de datos!"]);
 
 } else {
     echo json_encode(["status" => "error", "message" => "Método no permitido."]);
 }
-$conexion->close();
+
+$conexion = null; // Cierra la conexión PDO
 ?>
