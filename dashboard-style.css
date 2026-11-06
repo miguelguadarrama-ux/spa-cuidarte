@@ -1,0 +1,314 @@
+/* Sincronización estricta con las variables de marca y base de datos SQL */
+:root {
+  --bg-cream: #FDFBF7;
+  --bg-card: #FFFFFF;
+  --text-dark: #271a2e;        /* Tu color principal del texto */
+  --text-muted: #6b5c69;
+  --accent-green: #3a1e3a;      /* Color ciruela de fondo y botones */
+  --accent-gold: #C9A96E;       /* Dorados para marcas visuales */
+  --border-color: #EAE5DE;
+  --shadow-sm: 0 4px 16px rgba(39, 26, 46, 0.03);
+  --radius-md: 16px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  background-color: var(--bg-cream);
+  color: var(--text-dark);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Distribución en rejilla (Barra lateral fija + Contenido expandible) */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* --- Barra Lateral --- */
+.sidebar {
+  width: 260px;
+  background-color: var(--accent-green);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 12px;
+  margin-bottom: 40px;
+}
+
+.sidebar-brand h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.brand-icon {
+  color: var(--accent-gold);
+  font-size: 1.5rem;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+/* Botones de control de las pestañas SQL */
+.menu-item {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.menu-item i {
+  width: 20px;
+  font-size: 1.1rem;
+  transition: transform 0.2s;
+}
+
+.menu-item:hover, .menu-item.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.menu-item.active i {
+  color: var(--accent-gold);
+  transform: scale(1.1);
+}
+
+.sidebar-footer {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logout-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  transition: color 0.2s;
+}
+
+.logout-link:hover {
+  color: #ff6b6b;
+}
+
+/* --- Área de Contenido --- */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-cream);
+  overflow-x: hidden;
+}
+
+.content-header {
+  background-color: var(--bg-card);
+  padding: 24px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.header-subtitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.header-title h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-dark);
+}
+
+/* Perfil de administración del encabezado */
+.admin-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-info {
+  text-align: right;
+}
+
+.admin-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: block;
+}
+
+.admin-role {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.admin-avatar {
+  width: 42px;
+  height: 42px;
+  background-color: var(--border-color);
+  color: var(--text-dark);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 2px solid var(--accent-gold);
+}
+
+/* --- Cuerpo y Pestañas Alternables --- */
+.content-body {
+  padding: 40px;
+  flex: 1;
+}
+
+.dashboard-tab {
+  display: none; /* Oculto por defecto */
+}
+
+.dashboard-tab.active {
+  display: block; /* Solo se muestra la pestaña activa */
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.action-bar h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.btn-action {
+  background-color: var(--accent-green);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.btn-action:hover {
+  background-color: #271427;
+}
+
+/* --- Tablas Limpias y Minimalistas --- */
+.table-wrapper {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+th {
+  background-color: #FAF8F4;
+  color: var(--text-dark);
+  font-weight: 700;
+  padding: 16px 24px;
+  border-bottom: 2px solid var(--border-color);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-dark);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background-color: #FCFAF7;
+}
+
+/* --- Badges y Componentes de Estado --- */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-badge.pendiente {
+  background-color: #FFF4E5;
+  color: #B26A00;
+}
+
+.badge-service {
+  background-color: #F0EAF0;
+  color: var(--accent-green);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
