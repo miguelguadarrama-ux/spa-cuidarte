@@ -32,7 +32,7 @@
         <label for="email">Usuario o Correo</label>
         <div class="input-wrapper">
           <i class="fas fa-user input-icon"></i>
-          <input type="email" id="email" required autocomplete="username">
+          <input type="email" id="email" name="email" required autocomplete="username">
         </div>
       </div>
 
@@ -40,7 +40,7 @@
         <label for="password">Contraseña</label>
         <div class="input-wrapper">
           <i class="fas fa-lock input-icon"></i>
-          <input type="password" id="password" required autocomplete="current-password">
+          <input type="password" id="password" name="password" required autocomplete="current-password">
         </div>
       </div>
 
