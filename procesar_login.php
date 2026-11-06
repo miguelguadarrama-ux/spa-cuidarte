@@ -16,27 +16,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     try {
-        // 1. Primero buscamos en la tabla de empleados (para tu amiga y su hermana / admin)
+        // 1. Primero buscamos en la tabla de empleados (para administrador)
         $stmt = $conexion->prepare("SELECT id_empleado, nombre, correo, password, rol FROM empleados WHERE correo = ?");
         $stmt->execute([$correo]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-        $tipo = 'empleado';
 
         // 2. Si no está en empleados, buscamos en la tabla de clientes
         if (!$usuario) {
             $stmt = $conexion->prepare("SELECT idCliente AS id_empleado, nombre, correo, password, rol FROM cliente WHERE correo = ?");
             $stmt->execute([$correo]);
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-            $tipo = 'cliente';
         }
 
-        if (!$usuario) {
-            echo json_encode(["status" => "error", "message" => "El correo o la contraseña son incorrectos."]);
-            exit;
-        }
-
-        // 3. Verificamos la contraseña (asumiendo que está hasheada con password_hash)
-        if (password_verify($password, $usuario['password'])) {
+        // 3. Verificamos que el usuario exista antes de comprobar la contraseña
+        if ($usuario && isset($usuario['password']) && password_verify($password, $usuario['password'])) {
             // Guardamos los datos esenciales en la sesión de PHP
             $_SESSION['id_usuario'] = $usuario['id_empleado'];
             $_SESSION['nombre'] = $usuario['nombre'];
