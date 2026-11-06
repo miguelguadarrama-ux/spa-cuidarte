@@ -1,0 +1,192 @@
+/* Integración directa con tus variables de Consientt Spa y nuevas fuentes */
+:root {
+  --bg-cream: #FDFBF7;
+  --bg-card: #FFFFFF;
+  --text-dark: #271a2e;
+  --text-muted: #6b5c69;
+  --accent-green: #3a1e3a;      /* Tu color ciruela base */
+  --accent-gold: #C9A96E;       /* Detalles dorados */
+  --border-color: #DCD5CC;      
+  --shadow-md: 0 12px 32px rgba(39, 26, 46, 0.05);
+  --radius-md: 16px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  background-color: var(--bg-cream);
+  color: var(--text-dark);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Flor de loto decorativa y transparente de fondo */
+.bg-flower-overlay {
+  position: absolute;
+  bottom: -50px;
+  right: -50px;
+  width: 500px;
+  height: 500px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 512 512'%3E%3Cpath fill='%233a1e3a' fill-opacity='0.025' d='M256 32c-11.7 0-22 7-26.6 17.5L185.3 149.7c-54.4-4.8-106.6 17-142.1 57.5-6.8 7.8-6.1 19.6 1.7 26.5 7.8 6.8 19.6 6.1 26.5-1.7 27.8-31.7 68.8-48.4 111.4-44.1l-47.5 106.9c-4.7 10.5-2.1 22.8 6.2 30.4l88 80c4.1 3.7 9.4 5.7 14.8 5.7h25.4c5.4 0 10.7-2 14.8-5.7l88-80c8.3-7.5 10.9-19.8 6.2-30.4l-47.5-106.9c42.6-4.3 83.6 12.4 111.4 44.1 6.8 7.8 18.7 8.5 26.5 1.7 7.8-6.8 8.5-18.7 1.7-26.5-35.5-40.5-87.7-62.3-142.1-57.5L309.2 49.5C304.7 39 294.4 32 282.7 32H256z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Tarjeta centralizada minimalista y sólida */
+.login-card {
+  background: var(--bg-card);
+  width: 100%;
+  max-width: 420px;
+  padding: 44px 40px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color); 
+  box-shadow: var(--shadow-md);
+  position: relative;
+  z-index: 2; /* Por encima de la flor */
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.login-header .logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-header .logo i {
+  color: var(--accent-gold);
+}
+
+.login-header h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700; /* Grosor suavizado un punto aquí */
+  letter-spacing: -0.3px;
+  margin-bottom: 8px;
+}
+
+.login-header p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600; 
+}
+
+/* Bloque de formulario */
+.form-group {
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700; 
+  margin-bottom: 8px;
+  color: var(--text-dark);
+  letter-spacing: 0.3px;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dark); 
+  opacity: 0.8;
+  font-size: 1rem;
+}
+
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 14px 16px 14px 46px;
+  border: 2px solid var(--border-color); 
+  border-radius: var(--radius-sm);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600; 
+  color: var(--text-dark);
+  background: var(--bg-cream);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color: var(--accent-green);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 4px rgba(58, 30, 58, 0.1);
+}
+
+/* Botón de acción destacado */
+.btn-submit {
+  width: 100%;
+  background-color: var(--accent-green);
+  color: white;
+  padding: 14px 24px;
+  border-radius: 50px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700; 
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  margin-top: 8px;
+  letter-spacing: 0.2px;
+}
+
+.btn-submit:hover {
+  background-color: #271427;
+  transform: translateY(-1px);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+/* Pie de página */
+.login-footer {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.back-link {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: var(--text-dark);
+}
