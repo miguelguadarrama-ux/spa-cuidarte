@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $fechaHora = ($fechaTexto ? $fechaTexto : date('Y-m-d')) . ' ' . ($hora ? $hora : '12:00') . ':00';
 
         // 4. Insertar Cita (usando columna fecha_y_horario)
-        $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_horara, estado, total) VALUES (?, ?, ?, 'Pendiente', ?) RETURNING id_cita");
+        $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Pendiente', ?) RETURNING id_cita");
         $insertCita->execute([$id_cliente, $id_empleado, $fechaHora, $total]);
         $filaCita = $insertCita->fetch();
         $id_cita = $filaCita['id_cita'];
