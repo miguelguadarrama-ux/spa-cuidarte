@@ -175,7 +175,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
               <tbody>
                 <?php foreach ($clientes as $cli): ?>
                   <tr>
-                    <td><strong>#<?php echo $cli['id']; ?></strong></td>
+                    <td><strong>#<?php echo $cli['idcliente']; ?></strong></td>
                     <td><?php echo htmlspecialchars($cli['nombre']); ?></td>
                     <td><?php echo htmlspecialchars($cli['telefono'] ?? 'N/D'); ?></td>
                     <td><?php echo htmlspecialchars($cli['correo']); ?></td>
