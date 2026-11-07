@@ -39,7 +39,7 @@ session_start();
         <?php else: ?>
           <!-- Se muestra cuando NO se ha iniciado sesión -->
           <a href="login.php" style="color: var(--primary-color, #b8860b); font-weight: 600;"><i class="fas fa-user-lock"></i> Ingresar</a>
-          <a href="registro.php" style="color: var(--primary-color, #b8860b); font-weight: 600;">Registrar</a>
+          <a href="Registro.php" style="color: var(--primary-color, #b8860b); font-weight: 600;">Registrar</a>
         <?php endif; ?>
       </nav>
       <div class="header-actions">
