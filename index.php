@@ -27,6 +27,7 @@
         <a href="#experiencia">Sobre Nosotros</a>
         <a href="#contacto">Contacto</a>
         <a href="login.php" style="color: var(--primary-color, #b8860b); font-weight: 600;"><i class="fas fa-user-lock"></i> Ingresar</a>
+        <a href="Registro.php" style="color: var(--primary-color, #b8860b); font-weight: 600;"><i class="fas fa-user-lock"></i> Registrar</a>
       </nav>
       <div class="header-actions">
         <button class="btn-primary" id="btnHeaderCita">Agendar Cita</button>
