@@ -1,3 +1,11 @@
+<?php
+session_start();
+// Seguridad: Si no ha iniciado sesión o no es administrador, lo mandamos al login
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+    header("Location: login.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,11 +13,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Administrativo | Consientt Spa</title>
   <!-- Google Fonts -->
-  <link rel="preconnect" href="https://googleapis.com">
-  <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- CSS -->
   <link rel="stylesheet" href="dashboard-style.css">
 </head>
@@ -44,7 +52,7 @@
       </nav>
 
       <div class="sidebar-footer">
-        <a href="login.html" class="logout-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+        <a href="logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
       </div>
     </aside>
 
@@ -59,10 +67,10 @@
         </div>
         <div class="admin-profile">
           <div class="admin-info">
-            <span class="admin-name">Administrador</span>
+            <span class="admin-name"><?php echo htmlspecialchars($_SESSION['nombre'] ?? 'Administrador'); ?></span>
             <span class="admin-role">Acceso Total</span>
           </div>
-          <div class="admin-avatar">A</div>
+          <div class="admin-avatar"><?php echo strtoupper(substr($_SESSION['nombre'] ?? 'A', 0, 1)); ?></div>
         </div>
       </header>
 
@@ -72,7 +80,7 @@
         <!-- PESTAÑA: CITAS -->
         <section id="tab-citas" class="dashboard-tab active">
           <div class="action-bar">
-            <h3>Registros de `citas` y `detalle_citas`</h3>
+            <h3>Registros de <code>citas</code> y <code>detalle_citas</code></h3>
             <button class="btn-action"><i class="fas fa-plus"></i> Nueva Cita</button>
           </div>
           <div class="table-wrapper">
@@ -106,7 +114,7 @@
         <!-- PESTAÑA: CLIENTES -->
         <section id="tab-clientes" class="dashboard-tab">
           <div class="action-bar">
-            <h3>Registros de `cliente`</h3>
+            <h3>Registros de <code>cliente</code></h3>
             <button class="btn-action"><i class="fas fa-plus"></i> Añadir Cliente</button>
           </div>
           <div class="table-wrapper">
@@ -134,7 +142,7 @@
         <!-- PESTAÑA: EMPLEADOS -->
         <section id="tab-empleados" class="dashboard-tab">
           <div class="action-bar">
-            <h3>Registros de `empleados`</h3>
+            <h3>Registros de <code>empleados</code></h3>
             <button class="btn-action"><i class="fas fa-plus"></i> Registrar Empleado</button>
           </div>
           <div class="table-wrapper">
@@ -162,7 +170,7 @@
         <!-- PESTAÑA: SERVICIOS -->
         <section id="tab-servicios" class="dashboard-tab">
           <div class="action-bar">
-            <h3>Registros de `servicios`</h3>
+            <h3>Registros de <code>servicios</code></h3>
             <button class="btn-action"><i class="fas fa-plus"></i> Agregar Servicio</button>
           </div>
           <div class="table-wrapper">
@@ -190,7 +198,7 @@
         <!-- PESTAÑA: PAGOS -->
         <section id="tab-pagos" class="dashboard-tab">
           <div class="action-bar">
-            <h3>Registros de `pagos`</h3>
+            <h3>Registros de <code>pagos</code></h3>
             <button class="btn-action"><i class="fas fa-file-invoice-dollar"></i> Reporte Financiero</button>
           </div>
           <div class="table-wrapper">
