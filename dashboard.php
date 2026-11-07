@@ -19,7 +19,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- CSS -->
-  <link rel="stylesheet" href="dashboard-style.css">
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
 
