@@ -21,7 +21,7 @@ if ($es_acceso_total) {
     $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total 
                   FROM citas c
                   JOIN cliente cl ON c.id_cliente = cl.idcliente
-                  JOIN empleados e ON c.id_empleado = e.idcliente
+                  JOIN empleados e ON c.id_empleado = e.id
                   ORDER BY c.fecha_y_hora DESC";
     $stmt_citas = $conexion->prepare($sql_citas);
     $stmt_citas->execute();
@@ -29,7 +29,7 @@ if ($es_acceso_total) {
     $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total 
                   FROM citas c
                   JOIN cliente cl ON c.id_cliente = cl.idcliente
-                  JOIN empleados e ON c.id_empleado = e.id_empleado 
+                  JOIN empleados e ON c.id_empleado = e.id
                   WHERE c.id_empleado = ?
                   ORDER BY c.fecha_y_hora DESC";
     $stmt_citas = $conexion->prepare($sql_citas);
