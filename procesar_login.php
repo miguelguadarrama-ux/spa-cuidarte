@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['rol'] = $usuario['rol']; // 'admin' o 'usuario'
 
             // Determinamos a dónde redirigir según el rol
-            $redirect = ($usuario['rol'] === 'admin') ? 'admin.php' : 'index.html';
+            $redirect = ($usuario['rol'] === 'admin') ? 'admin.php' : 'index.php';
 
             echo json_encode([
                 "status" => "success", 
