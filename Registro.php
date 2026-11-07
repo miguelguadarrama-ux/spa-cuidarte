@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         <?php endif; ?>
 
-        <form action="registro.php" method="POST">
+        <form method="POST">
             <div class="form-group" style="margin-bottom: 15px;">
                 <label for="nombre">Nombre completo</label>
                 <input type="text" id="nombre" name="nombre" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px;" placeholder="Tu nombre">
