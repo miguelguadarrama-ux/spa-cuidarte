@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -26,8 +29,18 @@
         <a href="#citas">Agendar Cita</a>
         <a href="#experiencia">Sobre Nosotros</a>
         <a href="#contacto">Contacto</a>
-        <a href="login.php" style="color: var(--primary-color, #b8860b); font-weight: 600;"><i class="fas fa-user-lock"></i> Ingresar</a>
-        <a href="Registro.php" style="color: var(--primary-color, #b8860b); font-weight: 600;"><i class="fas fa-user-lock"></i> Registrar</a>
+        
+        <?php if (isset($_SESSION['nombre'])): ?>
+          <!-- Se muestra cuando la sesión está activa -->
+          <span style="color: var(--primary-color, #b8860b); font-weight: 600; margin-right: 10px;">
+            <i class="fas fa-user-circle"></i> ¡Hola, <?php echo htmlspecialchars($_SESSION['nombre']); ?>!
+          </span>
+          <a href="logout.php" style="color: #d9534f; font-weight: 600;"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+        <?php else: ?>
+          <!-- Se muestra cuando NO se ha iniciado sesión -->
+          <a href="login.php" style="color: var(--primary-color, #b8860b); font-weight: 600;"><i class="fas fa-user-lock"></i> Ingresar</a>
+          <a href="registro.php" style="color: var(--primary-color, #b8860b); font-weight: 600;">Registrar</a>
+        <?php endif; ?>
       </nav>
       <div class="header-actions">
         <button class="btn-primary" id="btnHeaderCita">Agendar Cita</button>
@@ -228,7 +241,7 @@
             <h3><span class="step-number">2</span> Tus datos</h3>
             <div class="form-group">
               <label for="nombre">Nombre completo</label>
-              <input type="text" id="nombre" placeholder="Ej. Ana García" required>
+              <input type="text" id="nombre" placeholder="Ej. Ana García" value="<?php echo htmlspecialchars($_SESSION['nombre'] ?? ''); ?>" required>
             </div>
             <div class="form-group">
               <label for="telefono">Teléfono (WhatsApp)</label>
@@ -236,7 +249,7 @@
             </div>
             <div class="form-group">
               <label for="email">Correo electrónico</label>
-              <input type="email" id="email" placeholder="ana@ejemplo.com" required>
+              <input type="email" id="email" placeholder="ana@ejemplo.com" value="<?php echo htmlspecialchars($_SESSION['correo'] ?? ''); ?>" required>
             </div>
           </div>
 
