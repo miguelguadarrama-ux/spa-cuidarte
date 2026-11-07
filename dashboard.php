@@ -205,7 +205,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
               <tbody>
                 <?php foreach ($empleados as $emp): ?>
                   <tr>
-                    <td><strong>#<?php echo $emp['id']; ?></strong></td>
+                    <td><strong>#<?php echo $emp['id_empleado']; ?></strong></td>
                     <td><?php echo htmlspecialchars($emp['nombre']); ?></td>
                     <td><?php echo htmlspecialchars($emp['correo']); ?></td>
                     <td><?php echo htmlspecialchars($emp['rol']); ?></td>
@@ -234,7 +234,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
               <tbody>
                 <?php foreach ($servicios as $ser): ?>
                   <tr>
-                    <td><strong>#<?php echo $ser['id']; ?></strong></td>
+                    <td><strong>#<?php echo $ser['id_servicio']; ?></strong></td>
                     <td><?php echo htmlspecialchars($ser['nombre']); ?></td>
                     <td><strong>$<?php echo number_format($ser['precio'], 2); ?></strong></td>
                   </tr>
