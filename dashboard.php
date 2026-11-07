@@ -1,10 +1,57 @@
 <?php
 session_start();
-// Seguridad: Si no ha iniciado sesión o no es administrador, lo mandamos al login
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+// Seguridad: Si no ha iniciado sesión o no es admin/empleado, al login
+if (!isset($_SESSION['rol'])) {
     header("Location: login.php");
     exit;
 }
+
+include 'conexion.php';
+
+// Variables de sesión para los filtros
+$empleado_id = $_SESSION['id'] ?? null; 
+$rol = $_SESSION['rol'] ?? '';
+$correo = $_SESSION['correo'] ?? '';
+
+// Definimos si tiene acceso total (tú o superadmin)
+$es_acceso_total = ($rol === 'superadmin' || $rol === 'admin' || $correo === 'miguel@consientt.com');
+
+// 1. OBTENER CITAS (Filtradas por rol)
+if ($es_acceso_total) {
+    $sql_citas = "SELECT c.id AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_hora, c.estado, c.total 
+                  FROM citas c
+                  JOIN clientes cl ON c.cliente_id = cl.id
+                  JOIN empleados e ON c.empleado_id = e.id
+                  ORDER BY c.fecha_hora DESC";
+    $stmt_citas = $conexion->prepare($sql_citas);
+    $stmt_citas->execute();
+} else {
+    $sql_citas = "SELECT c.id AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_hora, c.estado, c.total 
+                  FROM citas c
+                  JOIN clientes cl ON c.cliente_id = cl.id
+                  JOIN empleados e ON c.empleado_id = e.id
+                  WHERE c.empleado_id = ?
+                  ORDER BY c.fecha_hora DESC";
+    $stmt_citas = $conexion->prepare($sql_citas);
+    $stmt_citas->execute([$empleado_id]);
+}
+$citas = $stmt_citas->fetchAll(PDO::FETCH_ASSOC);
+
+// 2. OBTENER CLIENTES
+$stmt_clientes = $conexion->query("SELECT * FROM clientes ORDER BY id DESC");
+$clientes = $stmt_clientes->fetchAll(PDO::FETCH_ASSOC);
+
+// 3. OBTENER EMPLEADOS
+$stmt_empleados = $conexion->query("SELECT * FROM empleados ORDER BY id DESC");
+$empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
+
+// 4. OBTENER SERVICIOS
+$stmt_servicios = $conexion->query("SELECT * FROM servicios ORDER BY id DESC");
+$servicios = $stmt_servicios->fetchAll(PDO::FETCH_ASSOC);
+
+// 5. OBTENER PAGOS
+$stmt_pagos = $conexion->query("SELECT * FROM pagos ORDER BY id DESC");
+$pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -12,21 +59,17 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Administrativo | Consientt Spa</title>
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- CSS -->
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
 
-  <!-- Contenedor General del Dashboard -->
   <div class="dashboard-container">
     
-    <!-- Barra Lateral de Navegación (Tablas SQL) -->
+    <!-- Barra Lateral de Navegación -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <i class="fas fa-spa brand-icon"></i>
@@ -59,7 +102,6 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
     <!-- Área Principal de Contenido -->
     <main class="main-content">
       
-      <!-- Encabezado Superior -->
       <header class="content-header">
         <div class="header-title">
           <span class="header-subtitle">Gestión Interna</span>
@@ -68,19 +110,18 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
         <div class="admin-profile">
           <div class="admin-info">
             <span class="admin-name"><?php echo htmlspecialchars($_SESSION['nombre'] ?? 'Administrador'); ?></span>
-            <span class="admin-role">Acceso Total</span>
+            <span class="admin-role"><?php echo $es_acceso_total ? 'Acceso Total' : 'Empleado'; ?></span>
           </div>
           <div class="admin-avatar"><?php echo strtoupper(substr($_SESSION['nombre'] ?? 'A', 0, 1)); ?></div>
         </div>
       </header>
 
-      <!-- SECCIÓN PRINCIPAL: CAMBIANTE POR PESTAÑAS -->
       <div class="content-body">
         
         <!-- PESTAÑA: CITAS -->
         <section id="tab-citas" class="dashboard-tab active">
           <div class="action-bar">
-            <h3>Registros de <code>citas</code> y <code>detalle_citas</code></h3>
+            <h3>Registros de <code>citas</code></h3>
             <button class="btn-action"><i class="fas fa-plus"></i> Nueva Cita</button>
           </div>
           <div class="table-wrapper">
@@ -91,21 +132,25 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
                   <th>Cliente</th>
                   <th>Atendió (Empleado)</th>
                   <th>Fecha y Hora</th>
-                  <th>Servicios Solicitados (Detalle)</th>
                   <th>Estado</th>
                   <th>Total</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>#1</strong></td>
-                  <td>Ana García</td>
-                  <td>Clara Gómez</td>
-                  <td>12/10/2026 15:30</td>
-                  <td><span class="badge-service">Pedicure Clínico Completo</span></td>
-                  <td><span class="status-badge pendiente">Pendiente</span></td>
-                  <td><strong>$650.00</strong></td>
-                </tr>
+                <?php if (empty($citas)): ?>
+                  <tr><td colspan="6" style="text-align: center;">No hay citas registradas.</td></tr>
+                <?php else: ?>
+                  <?php foreach ($citas as $cita): ?>
+                    <tr>
+                      <td><strong>#<?php echo $cita['id_cita']; ?></strong></td>
+                      <td><?php echo htmlspecialchars($cita['cliente_nombre']); ?></td>
+                      <td><?php echo htmlspecialchars($cita['empleado_nombre']); ?></td>
+                      <td><?php echo htmlspecialchars($cita['fecha_hora']); ?></td>
+                      <td><span class="status-badge <?php echo strtolower($cita['estado']); ?>"><?php echo htmlspecialchars($cita['estado']); ?></span></td>
+                      <td><strong>$<?php echo number_format($cita['total'], 2); ?></strong></td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
@@ -114,7 +159,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
         <!-- PESTAÑA: CLIENTES -->
         <section id="tab-clientes" class="dashboard-tab">
           <div class="action-bar">
-            <h3>Registros de <code>cliente</code></h3>
+            <h3>Registros de <code>clientes</code></h3>
             <button class="btn-action"><i class="fas fa-plus"></i> Añadir Cliente</button>
           </div>
           <div class="table-wrapper">
@@ -128,12 +173,14 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>#1</strong></td>
-                  <td>Ana García</td>
-                  <td>+52 55 1234 5678</td>
-                  <td>ana@ejemplo.com</td>
-                </tr>
+                <?php foreach ($clientes as $cli): ?>
+                  <tr>
+                    <td><strong>#<?php echo $cli['id']; ?></strong></td>
+                    <td><?php echo htmlspecialchars($cli['nombre']); ?></td>
+                    <td><?php echo htmlspecialchars($cli['telefono'] ?? 'N/D'); ?></td>
+                    <td><?php echo htmlspecialchars($cli['correo']); ?></td>
+                  </tr>
+                <?php endforeach; ?>
               </tbody>
             </table>
           </div>
@@ -151,17 +198,19 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
                 <tr>
                   <th>ID Empleado</th>
                   <th>Nombre</th>
-                  <th>Especialidad</th>
-                  <th>Teléfono</th>
+                  <th>Correo</th>
+                  <th>Rol</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>#1</strong></td>
-                  <td>Clara Gómez</td>
-                  <td>Podología Clínica</td>
-                  <td>+52 55 9876 5432</td>
-                </tr>
+                <?php foreach ($empleados as $emp): ?>
+                  <tr>
+                    <td><strong>#<?php echo $emp['id']; ?></strong></td>
+                    <td><?php echo htmlspecialchars($emp['nombre']); ?></td>
+                    <td><?php echo htmlspecialchars($emp['correo']); ?></td>
+                    <td><?php echo htmlspecialchars($emp['rol']); ?></td>
+                  </tr>
+                <?php endforeach; ?>
               </tbody>
             </table>
           </div>
@@ -179,17 +228,17 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
                 <tr>
                   <th>ID Servicio</th>
                   <th>Nombre del Servicio</th>
-                  <th>Duración</th>
                   <th>Precio Base</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>#1</strong></td>
-                  <td>Pedicure Clínico Completo</td>
-                  <td>60 min</td>
-                  <td><strong>$650.00</strong></td>
-                </tr>
+                <?php foreach ($servicios as $ser): ?>
+                  <tr>
+                    <td><strong>#<?php echo $ser['id']; ?></strong></td>
+                    <td><?php echo htmlspecialchars($ser['nombre']); ?></td>
+                    <td><strong>$<?php echo number_format($ser['precio'], 2); ?></strong></td>
+                  </tr>
+                <?php endforeach; ?>
               </tbody>
             </table>
           </div>
@@ -206,20 +255,20 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
               <thead>
                 <tr>
                   <th>ID Pago</th>
-                  <th>ID Cita Relacionada</th>
-                  <th>Monto Pagado (20% o Total)</th>
-                  <th>Fecha de Pago</th>
-                  <th>Método de Pago</th>
+                  <th>ID Cita</th>
+                  <th>Monto</th>
+                  <th>Método</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>#1</strong></td>
-                  <td>Cita #1</td>
-                  <td><strong>$130.00</strong></td>
-                  <td>10/10/2026 19:38</td>
-                  <td>Tarjeta de Crédito</td>
-                </tr>
+                <?php foreach ($pagos as $pag): ?>
+                  <tr>
+                    <td><strong>#<?php echo $pag['id']; ?></strong></td>
+                    <td>Cita #<?php echo $pag['cita_id']; ?></td>
+                    <td><strong>$<?php echo number_format($pag['monto'], 2); ?></strong></td>
+                    <td><?php echo htmlspecialchars($pag['metodo']); ?></td>
+                  </tr>
+                <?php endforeach; ?>
               </tbody>
             </table>
           </div>
@@ -229,7 +278,6 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
     </main>
   </div>
 
-  <!-- JavaScript básico para cambio de pestañas interactivo -->
   <script>
     const menuItems = document.querySelectorAll('.menu-item');
     const tabs = document.querySelectorAll('.dashboard-tab');
@@ -237,16 +285,13 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
 
     menuItems.forEach(item => {
       item.addEventListener('click', () => {
-        // Remover clases activas pasadas
         menuItems.forEach(i => i.classList.remove('active'));
         tabs.forEach(t => t.classList.remove('active'));
 
-        // Activar la nueva pestaña seleccionada
         item.classList.add('active');
         const targetTab = item.getAttribute('data-target');
         document.getElementById(targetTab).classList.add('active');
         
-        // Actualizar título dinámico en cabecera
         tabTitle.textContent = "Control de " + item.textContent.trim();
       });
     });
