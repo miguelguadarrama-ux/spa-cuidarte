@@ -18,39 +18,39 @@ $es_acceso_total = ($rol === 'superadmin' || $rol === 'admin' || $correo === 'mi
 
 // 1. OBTENER CITAS (Filtradas por rol)
 if ($es_acceso_total) {
-    $sql_citas = "SELECT c.id AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_hora, c.estado, c.total 
+    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total 
                   FROM citas c
-                  JOIN clientes cl ON c.cliente_id = cl.id
-                  JOIN empleados e ON c.empleado_id = e.id
-                  ORDER BY c.fecha_hora DESC";
+                  JOIN cliente cl ON c.id_cliente = cl.idcliente
+                  JOIN empleados e ON c.id_empleado = e.id
+                  ORDER BY c.fecha_y_hora DESC";
     $stmt_citas = $conexion->prepare($sql_citas);
     $stmt_citas->execute();
 } else {
-    $sql_citas = "SELECT c.id AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_hora, c.estado, c.total 
+    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total 
                   FROM citas c
-                  JOIN clientes cl ON c.cliente_id = cl.id
-                  JOIN empleados e ON c.empleado_id = e.id
-                  WHERE c.empleado_id = ?
-                  ORDER BY c.fecha_hora DESC";
+                  JOIN cliente cl ON c.id_cliente = cl.idcliente
+                  JOIN empleados e ON c.id_empleado = e.id
+                  WHERE c.id_empleado = ?
+                  ORDER BY c.fecha_y_hora DESC";
     $stmt_citas = $conexion->prepare($sql_citas);
     $stmt_citas->execute([$empleado_id]);
 }
 $citas = $stmt_citas->fetchAll(PDO::FETCH_ASSOC);
 
 // 2. OBTENER CLIENTES
-$stmt_clientes = $conexion->query("SELECT * FROM clientes ORDER BY id DESC");
+$stmt_clientes = $conexion->query("SELECT * FROM cliente ORDER BY idcliente DESC");
 $clientes = $stmt_clientes->fetchAll(PDO::FETCH_ASSOC);
 
 // 3. OBTENER EMPLEADOS
-$stmt_empleados = $conexion->query("SELECT * FROM empleados ORDER BY id DESC");
+$stmt_empleados = $conexion->query("SELECT * FROM empleados ORDER BY id_empleado DESC");
 $empleados = $stmt_empleados->fetchAll(PDO::FETCH_ASSOC);
 
 // 4. OBTENER SERVICIOS
-$stmt_servicios = $conexion->query("SELECT * FROM servicios ORDER BY id DESC");
+$stmt_servicios = $conexion->query("SELECT * FROM servicios ORDER BY id_servicio DESC");
 $servicios = $stmt_servicios->fetchAll(PDO::FETCH_ASSOC);
 
 // 5. OBTENER PAGOS
-$stmt_pagos = $conexion->query("SELECT * FROM pagos ORDER BY id DESC");
+$stmt_pagos = $conexion->query("SELECT * FROM pagos ORDER BY id_pago DESC");
 $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
