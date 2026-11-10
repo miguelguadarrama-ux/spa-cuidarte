@@ -320,8 +320,8 @@ session_start();
               <span id="resumenTotal">$0</span>
             </div>
             <div class="resumen-item" style="border-bottom: none; padding-top: 0;">
-              <span>Anticipo a pagar (20%)</span>
-              <span id="resumenAnticipo">$0</span>
+             <span id="textoLabelPago">Anticipo a pagar (20%)</span>
+             <span id="resumenAnticipo">$0</span>
             </div>
             <button type="submit" form="formCita" class="btn-agendar" id="btnAgendar">Pagar y agendar cita</button>
             <p class="resumen-nota">Al agendar aceptas nuestra política de cancelación.</p>
