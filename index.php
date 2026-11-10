@@ -222,107 +222,124 @@ session_start();
       <h2>Agenda y aparta con 20% de anticipo</h2>
       <p class="sub">Reserva tu cita en línea. Te confirmaremos por WhatsApp.</p>
 
-      <div class="agendamiento-grid">
-        <!-- Formulario -->
-        <form class="agendamiento-form" id="formCita" novalidate>
-        <!-- Paso 1 -->
-          <div class="form-step">
-            <h3><span class="step-number">1</span> Elige fecha y horario</h3>
-            <div class="form-group" style="margin-bottom: 20px;">
-              <label for="inputFechaCita" style="font-weight: 600; margin-bottom: 8px; display: block;">Fecha de la cita</label>
-              <input type="date" id="inputFechaCita" class="form-control" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Inter', sans-serif;">
+      <?php if (isset($_SESSION['nombre'])): ?>
+        <!-- FORMULARIO VISIBLE SOLO SI TIENE SESIÓN INICIADA -->
+        <div class="agendamiento-grid">
+          <!-- Formulario -->
+          <form class="agendamiento-form" id="formCita" novalidate>
+          <!-- Paso 1 -->
+            <div class="form-step">
+              <h3><span class="step-number">1</span> Elige fecha y horario</h3>
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label for="inputFechaCita" style="font-weight: 600; margin-bottom: 8px; display: block;">Fecha de la cita</label>
+                <input type="date" id="inputFechaCita" class="form-control" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Inter', sans-serif;">
+              </div>
+              
+              <label style="font-weight: 600; margin-bottom: 8px; display: block;">Horarios disponibles</label>
+              <div class="horas-grid" id="horasGrid">
+                <!-- JS genera las horas -->
+              </div>
             </div>
-            
-            <label style="font-weight: 600; margin-bottom: 8px; display: block;">Horarios disponibles</label>
-            <div class="horas-grid" id="horasGrid">
-              <!-- JS genera las horas -->
-            </div>
-          </div>
 
-          <!-- Paso 2 -->
-          <div class="form-step">
-            <h3><span class="step-number">2</span> Tus datos</h3>
-            <div class="form-group">
-              <label for="nombre">Nombre completo</label>
-              <input type="text" id="nombre" placeholder="Ej. Ana García" value="<?php echo htmlspecialchars($_SESSION['nombre'] ?? ''); ?>" required>
+            <!-- Paso 2 -->
+            <div class="form-step">
+              <h3><span class="step-number">2</span> Tus datos</h3>
+              <div class="form-group">
+                <label for="nombre">Nombre completo</label>
+                <input type="text" id="nombre" placeholder="Ej. Ana García" value="<?php echo htmlspecialchars($_SESSION['nombre'] ?? ''); ?>" required>
+              </div>
+              <div class="form-group">
+                <label for="telefono">Teléfono (WhatsApp)</label>
+                <input type="tel" id="telefono" placeholder="+52 55 1234 5678" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" placeholder="ana@ejemplo.com" value="<?php echo htmlspecialchars($_SESSION['correo'] ?? ''); ?>" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="telefono">Teléfono (WhatsApp)</label>
-              <input type="tel" id="telefono" placeholder="+52 55 1234 5678" required>
-            </div>
-            <div class="form-group">
-              <label for="email">Correo electrónico</label>
-              <input type="email" id="email" placeholder="ana@ejemplo.com" value="<?php echo htmlspecialchars($_SESSION['correo'] ?? ''); ?>" required>
-            </div>
-          </div>
 
-          <!-- Paso 3 -->
-          <div class="form-step">
-            <h3><span class="step-number">3</span> Servicio y anticipo</h3>
-            <div class="form-group">
-              <label for="servicioSelect">Servicio deseado</label>
-              <select id="servicioSelect" required>
-                <option value="" disabled selected>Selecciona un servicio</option>
-                <option value="Pedicure Clínico Completo" data-precio="650" data-duracion="60 min">Pedicure Clínico Completo - $650</option>
-                <option value="Spa de Hidratación Profunda" data-precio="780" data-duracion="75 min">Spa de Hidratación Profunda - $780</option>
-                <option value="Baile de Manos - Manicure Ruso" data-precio="480" data-duracion="50 min">Baile de Manos - Manicure Ruso - $480</option>
-                <option value="Pedicure Spa + Gelish" data-precio="950" data-duracion="90 min">Pedicure Spa + Gelish - $950</option>
-              </select>
+            <!-- Paso 3 -->
+            <div class="form-step">
+              <h3><span class="step-number">3</span> Servicio y anticipo</h3>
+              <div class="form-group">
+                <label for="servicioSelect">Servicio deseado</label>
+                <select id="servicioSelect" required>
+                  <option value="" disabled selected>Selecciona un servicio</option>
+                  <option value="Pedicure Clínico Completo" data-precio="650" data-duracion="60 min">Pedicure Clínico Completo - $650</option>
+                  <option value="Spa de Hidratación Profunda" data-precio="780" data-duracion="75 min">Spa de Hidratación Profunda - $780</option>
+                  <option value="Baile de Manos - Manicure Ruso" data-precio="480" data-duracion="50 min">Baile de Manos - Manicure Ruso - $480</option>
+                  <option value="Pedicure Spa + Gelish" data-precio="950" data-duracion="90 min">Pedicure Spa + Gelish - $950</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Método de pago</label>
+                <select id="metodoPago">
+                  <option>Tarjeta de crédito/débito</option>
+                  <option>Transferencia bancaria</option>
+                  <option>Efectivo en recepción</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Nombre en la tarjeta</label>
+                <input type="text" id="nombreTarjeta" placeholder="Como aparece en la tarjeta">
+              </div>
+              <div class="form-group">
+                <label>Número de tarjeta</label>
+                <input type="text" id="numeroTarjeta" placeholder="0000 0000 0000 0000" maxlength="19">
+              </div>
             </div>
-            <div class="form-group">
-              <label>Método de pago</label>
-              <select id="metodoPago">
-                <option>Tarjeta de crédito/débito</option>
-                <option>Transferencia bancaria</option>
-                <option>Efectivo en recepción</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Nombre en la tarjeta</label>
-              <input type="text" id="nombreTarjeta" placeholder="Como aparece en la tarjeta">
-            </div>
-            <div class="form-group">
-              <label>Número de tarjeta</label>
-              <input type="text" id="numeroTarjeta" placeholder="0000 0000 0000 0000" maxlength="19">
-            </div>
-          </div>
 
-          <div class="mensaje-confirmacion" id="mensajeConfirmacion">
-            <i class="fas fa-check-circle"></i> ¡Gracias! Tu cita ha sido agendada. Te contactaremos por WhatsApp para confirmar.
-          </div>
-        </form>
+            <div class="mensaje-confirmacion" id="mensajeConfirmacion">
+              <i class="fas fa-check-circle"></i> ¡Gracias! Tu cita ha sido agendada. Te contactaremos por WhatsApp para confirmar.
+            </div>
+          </form>
 
-        <!-- Resumen -->
-        <div class="resumen-cita">
-          <h3>Resumen de tu cita</h3>
-          <div class="resumen-item">
-            <span>Servicio</span>
-            <span id="resumenServicio">—</span>
+          <!-- Resumen -->
+          <div class="resumen-cita">
+            <h3>Resumen de tu cita</h3>
+            <div class="resumen-item">
+              <span>Servicio</span>
+              <span id="resumenServicio">—</span>
+            </div>
+            <div class="resumen-item">
+              <span>Fecha</span>
+              <span id="resumenFecha">—</span>
+            </div>
+            <div class="resumen-item">
+              <span>Hora</span>
+              <span id="resumenHora">—</span>
+            </div>
+            <div class="resumen-item">
+              <span>Duración</span>
+              <span id="resumenDuracion">—</span>
+            </div>
+            <div class="resumen-total">
+              <span>Total</span>
+              <span id="resumenTotal">$0</span>
+            </div>
+            <div class="resumen-item" style="border-bottom: none; padding-top: 0;">
+              <span>Anticipo a pagar (20%)</span>
+              <span id="resumenAnticipo">$0</span>
+            </div>
+            <button type="submit" form="formCita" class="btn-agendar" id="btnAgendar">Pagar y agendar cita</button>
+            <p class="resumen-nota">Al agendar aceptas nuestra política de cancelación.</p>
           </div>
-          <div class="resumen-item">
-            <span>Fecha</span>
-            <span id="resumenFecha">—</span>
-          </div>
-          <div class="resumen-item">
-            <span>Hora</span>
-            <span id="resumenHora">—</span>
-          </div>
-          <div class="resumen-item">
-            <span>Duración</span>
-            <span id="resumenDuracion">—</span>
-          </div>
-          <div class="resumen-total">
-            <span>Total</span>
-            <span id="resumenTotal">$0</span>
-          </div>
-          <div class="resumen-item" style="border-bottom: none; padding-top: 0;">
-            <span>Anticipo a pagar (20%)</span>
-            <span id="resumenAnticipo">$0</span>
-          </div>
-          <button type="submit" form="formCita" class="btn-agendar" id="btnAgendar">Pagar y agendar cita</button>
-          <p class="resumen-nota">Al agendar aceptas nuestra política de cancelación.</p>
         </div>
-      </div>
+      <?php else: ?>
+        <!-- AVISO PARA VISITANTES SIN SESIÓN -->
+        <div style="text-align: center; padding: 50px 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 600px; margin: 30px auto;">
+          <div style="font-size: 3rem; color: #b8860b; margin-bottom: 15px;">
+            <i class="fas fa-lock"></i>
+          </div>
+          <h3 style="margin-bottom: 10px; color: #333;">Inicia sesión para agendar tu cita</h3>
+          <p style="color: #666; margin-bottom: 25px;">Para brindarte una atención personalizada y llevar el control de tus reservas, necesitas iniciar sesión o crear una cuenta.</p>
+          <div>
+            <a href="login.php" class="btn-primary" style="padding: 12px 25px; text-decoration: none; display: inline-block; margin-right: 10px; border-radius: 6px;">Iniciar Sesión</a>
+            <a href="Registro.php" class="btn-outline" style="padding: 12px 25px; text-decoration: none; display: inline-block; border-radius: 6px; border: 1px solid #b8860b; color: #b8860b;">Registrarse</a>
+          </div>
+        </div>
+      <?php endif; ?>
+
     </div>
   </section>
 
