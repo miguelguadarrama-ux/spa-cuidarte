@@ -50,28 +50,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $total = $datosServicio['precio'];
         $anticipo = $total * 0.20; 
 
-        // 3. Asignar empleado válido (recibido por POST o buscando el primer empleado disponible en la BD)
+        // 3. Asignar empleado válido
         $id_empleado = $_POST['id_empleado'] ?? null;
         if (!$id_empleado) {
             $stmtEmp = $conexion->query("SELECT id_empleado FROM empleados ORDER BY id_empleado ASC LIMIT 1");
             $empValido = $stmtEmp->fetch();
-            $id_empleado = $empValido['id_empleado'] ?? 5; // Si no encuentra nada, usa 5 de respaldo
+            $id_empleado = $empValido['id_empleado'] ?? 5; 
         }
 
-        // Formatear la fecha para PostgreSQL
-        $fechaHora = ($fechaTexto ? $fechaTexto : date('Y-m-d')) . ' ' . ($hora ? $hora : '12:00') . ':00';
+        // 4. Blindaje total de Fecha y Hora
+        $horaLimpia = (strlen($hora) >= 5) ? substr($hora, 0, 5) . ':00' : '12:00:00';
+        
+        if (empty($fechaTexto) || $fechaTexto === 'null' || $fechaTexto === 'undefined' || preg_match('/[a-zA-Z]/', $fechaTexto)) {
+            $fechaHora = date('Y-m-d') . ' ' . $horaLimpia;
+        } else {
+            $fechaHora = $fechaTexto . ' ' . $horaLimpia;
+        }
 
-        // 4. Insertar Cita (usando columna fecha_y_horario)
+        // 5. Insertar Cita (usando fecha_y_hora en minúsculas)
         $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Pendiente', ?) RETURNING id_cita");
         $insertCita->execute([$id_cliente, $id_empleado, $fechaHora, $total]);
         $filaCita = $insertCita->fetch();
         $id_cita = $filaCita['id_cita'];
 
-        // 5. Insertar detalle de cita
+        // 6. Insertar detalle de cita
         $insertDetalle = $conexion->prepare("INSERT INTO detalle_citas (id_cita, id_servicio, precio_unitario) VALUES (?, ?, ?)");
         $insertDetalle->execute([$id_cita, $id_servicio, $total]);
 
-        // 6. Registrar el pago del anticipo
+        // 7. Registrar el pago del anticipo
         $insertPago = $conexion->prepare("INSERT INTO pagos (id_cita, monto, metodo_pago) VALUES (?, ?, ?)");
         $insertPago->execute([$id_cita, $anticipo, $metodoPago]);
 
