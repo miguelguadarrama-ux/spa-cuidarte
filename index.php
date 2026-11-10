@@ -260,8 +260,9 @@ session_start();
 
             <!-- Paso 3 -->
             <div class="form-step">
-              <h3><span class="step-number">3</span> Servicio y anticipo</h3>
-              <div class="form-group">
+              <h3><span class="step-number">3</span> Servicio y pago</h3>
+              
+              <div class="form-group" style="margin-bottom: 15px;">
                 <label for="servicioSelect">Servicio deseado</label>
                 <select id="servicioSelect" required>
                   <option value="" disabled selected>Selecciona un servicio</option>
@@ -271,21 +272,22 @@ session_start();
                   <option value="Pedicure Spa + Gelish" data-precio="950" data-duracion="90 min">Pedicure Spa + Gelish - $950</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label>Método de pago</label>
-                <select id="metodoPago">
-                  <option>Tarjeta de crédito/débito</option>
-                  <option>Transferencia bancaria</option>
-                  <option>Efectivo en recepción</option>
+
+              <!-- Selector de modalidad de pago -->
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label for="modalidadPago">¿Cómo deseas pagar?</label>
+                <select id="modalidadPago" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+                  <option value="anticipo" selected>Solo anticipo (20%) — El 80% en recepción</option>
+                  <option value="completo">Pagar servicio completo (100%)</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label>Nombre en la tarjeta</label>
-                <input type="text" id="nombreTarjeta" placeholder="Como aparece en la tarjeta">
-              </div>
-              <div class="form-group">
-                <label>Número de tarjeta</label>
-                <input type="text" id="numeroTarjeta" placeholder="0000 0000 0000 0000" maxlength="19">
+
+              <!-- Caja informativa con datos de transferencia -->
+              <div style="background: #fdf8f0; border: 1px solid #e6d5bc; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                <p style="font-weight: 600; color: #b8860b; margin-bottom: 5px;"><i class="fas fa-university"></i> Pago por Transferencia Bancaria</p>
+                <p style="font-size: 0.88rem; color: #555; margin: 0; line-height: 1.4;" id="textoInstruccionPago">
+                  Realiza tu transferencia del <strong>20% de anticipo</strong> para apartar tu lugar. El resto se liquida al asistir.
+                </p>
               </div>
             </div>
 
