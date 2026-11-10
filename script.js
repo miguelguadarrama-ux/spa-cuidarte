@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const resumenDuracion = document.getElementById('resumenDuracion');
   const resumenTotal = document.getElementById('resumenTotal');
   const resumenAnticipo = document.getElementById('resumenAnticipo');
+  const textoLabelPago = document.getElementById('textoLabelPago'); // Etiqueta dinámica del resumen
   const servicioSelect = document.getElementById('servicioSelect');
   const modalidadPagoSelect = document.getElementById('modalidadPago');
   const textoInstruccionPago = document.getElementById('textoInstruccionPago');
@@ -87,8 +88,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const esCompleto = modalidadPagoSelect && modalidadPagoSelect.value === 'completo';
     const montoTransferencia = esCompleto ? servicioActual.precio : Math.round(servicioActual.precio * 0.2);
 
+    // Cambiar texto y monto dinámicamente en el resumen de la derecha
+    if (textoLabelPago) {
+      textoLabelPago.textContent = esCompleto ? 'Total a transferir (100%)' : 'Anticipo a pagar (20%)';
+    }
+
     if (resumenAnticipo) {
-      resumenAnticipo.textContent = `$${montoTransferencia} (${esCompleto ? '100%' : '20%'})`;
+      resumenAnticipo.textContent = `$${montoTransferencia}`;
     }
 
     if (textoInstruccionPago) {
@@ -203,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (!valido) {
-        alert('Por favor, revisa los campos marcados en rojo.');
+        alert('⚠️ Te faltan campos por rellenar o hay información inválida. Por favor, revisa los campos marcados en rojo.');
         return;
       }
 
