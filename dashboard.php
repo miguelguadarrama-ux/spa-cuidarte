@@ -6,6 +6,7 @@ if (!isset($_SESSION['rol'])) {
     exit;
 }
 
+
 include 'conexion.php';
 
 // Variables de sesión para los filtros
