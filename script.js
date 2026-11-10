@@ -1,42 +1,21 @@
 document.addEventListener('DOMContentLoaded', function () {
 
   /* ==========================================
-     1. GENERAR FECHAS DISPONIBLES (próximos 5 días)
+     1. SELECTOR DE FECHA LIBRE (Mes en curso y futuros)
      ========================================== */
-  const fechasGrid = document.getElementById('fechasGrid');
-  const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-                 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-
+  const inputFechaCita = document.getElementById('inputFechaCita');
   let fechaSeleccionada = null;
 
-  function generarFechas() {
-    if (!fechasGrid) return;
-    fechasGrid.innerHTML = '';
-    const hoy = new Date();
-    for (let i = 0; i < 5; i++) {
-      const fecha = new Date(hoy);
-      fecha.setDate(hoy.getDate() + i);
-      const div = document.createElement('div');
-      div.classList.add('fecha-item');
-      if (i === 2) div.classList.add('active');
-      div.dataset.fecha = `${diasSemana[fecha.getDay()]} ${fecha.getDate()} de ${meses[fecha.getMonth()]}`;
-      div.innerHTML = `
-        <span class="dia">${diasSemana[fecha.getDay()]}</span>
-        <span class="numero">${fecha.getDate()}</span>
-      `;
-      div.addEventListener('click', () => seleccionarFecha(div));
-      fechasGrid.appendChild(div);
-    }
-    const activa = fechasGrid.querySelector('.fecha-item.active');
-    if (activa) fechaSeleccionada = activa.dataset.fecha;
-  }
+  if (inputFechaCita) {
+    const hoyStr = new Date().toISOString().split('T')[0];
+    inputFechaCita.min = hoyStr;
+    inputFechaCita.value = hoyStr;
+    fechaSeleccionada = hoyStr;
 
-  function seleccionarFecha(el) {
-    fechasGrid.querySelectorAll('.fecha-item').forEach(f => f.classList.remove('active'));
-    el.classList.add('active');
-    fechaSeleccionada = el.dataset.fecha;
-    actualizarResumen();
+    inputFechaCita.addEventListener('change', (e) => {
+      fechaSeleccionada = e.target.value;
+      actualizarResumen();
+    });
   }
 
   /* ==========================================
