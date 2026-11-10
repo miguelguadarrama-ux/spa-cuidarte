@@ -312,3 +312,36 @@ tr:hover td {
   font-size: 0.8rem;
   font-weight: 600;
 }
+/* Estilos personalizados para los estados de las citas */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+/* Pendiente (Color Neutro / Amarillo suave) */
+.status-badge.pendiente {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+/* En Proceso (Color Naranja / Alerta activa) */
+.status-badge.en-proceso {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+/* Vencida (Color Rojo - No llegó o canceló) */
+.status-badge.vencida {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* Realizada (Color Verde - Éxito / Se completó) */
+.status-badge.realizada {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
