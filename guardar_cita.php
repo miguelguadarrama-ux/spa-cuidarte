@@ -12,7 +12,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $servicio = trim($_POST['servicio'] ?? ''); 
     $fechaTexto = trim($_POST['fecha'] ?? '');
     $hora = trim($_POST['hora'] ?? '');
-    $metodoPago = trim($_POST['metodoPago'] ?? '');
+    
+    // Recogemos la modalidad de pago enviada desde el JS ('anticipo' o 'completo')
+    $modalidadPago = trim($_POST['modalidad_pago'] ?? 'anticipo');
 
     if (empty($nombre) || empty($telefono) || empty($email) || empty($servicio)) {
         echo json_encode(["status" => "error", "message" => "Faltan campos obligatorios."]);
@@ -48,7 +50,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $id_servicio = $datosServicio['id_servicio'];
         $total = $datosServicio['precio'];
-        $anticipo = $total * 0.20; 
+        
+        // Calcular el monto a pagar según la modalidad elegida
+        if ($modalidadPago === 'completo') {
+            $montoPago = $total; // 100%
+            $metodoTexto = 'Transferencia (Pago Completo)';
+        } else {
+            $montoPago = $total * 0.20; // 20% anticipo
+            $metodoTexto = 'Transferencia (Anticipo 20%)';
+        }
 
         // 3. Asignar empleado válido
         $id_empleado = $_POST['id_empleado'] ?? null;
@@ -67,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $fechaHora = $fechaTexto . ' ' . $horaLimpia;
         }
 
-        // 5. Insertar Cita (usando fecha_y_hora en minúsculas)
+        // 5. Insertar Cita
         $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Pendiente', ?) RETURNING id_cita");
         $insertCita->execute([$id_cliente, $id_empleado, $fechaHora, $total]);
         $filaCita = $insertCita->fetch();
@@ -77,11 +87,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $insertDetalle = $conexion->prepare("INSERT INTO detalle_citas (id_cita, id_servicio, precio_unitario) VALUES (?, ?, ?)");
         $insertDetalle->execute([$id_cita, $id_servicio, $total]);
 
-        // 7. Registrar el pago del anticipo
+        // 7. Registrar el pago (Anticipo o Completo)
         $insertPago = $conexion->prepare("INSERT INTO pagos (id_cita, monto, metodo_pago) VALUES (?, ?, ?)");
-        $insertPago->execute([$id_cita, $anticipo, $metodoPago]);
+        $insertPago->execute([$id_cita, $montoPago, $metodoTexto]);
 
-        echo json_encode(["status" => "success", "message" => "¡Cita guardada correctamente en la base de datos en la nube!"]);
+        echo json_encode(["status" => "success", "message" => "¡Cita guardada correctamente! Te esperamos en Consientt Spa."]);
 
     } catch (Exception $e) {
         echo json_encode(["status" => "error", "message" => "Error en el servidor: " . $e->getMessage()]);
