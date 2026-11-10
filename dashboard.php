@@ -37,6 +37,33 @@ if ($es_acceso_total) {
 }
 $citas = $stmt_citas->fetchAll(PDO::FETCH_ASSOC);
 
+// Lógica para calcular estado dinámico (En proceso o Vencida)
+$ahoraTime = time();
+$duracionEstimada = 3600; // 1 hora de duración por cita en segundos
+
+foreach ($citas as &$cita) {
+    $estadoActual = trim($cita['estado']);
+    $fechaCitaTime = strtotime($cita['fecha_y_hora']);
+
+    // Solo evaluamos si está pendiente
+    if (strcasecmp($estadoActual, 'Pendiente') === 0) {
+        if ($ahoraTime >= $fechaCitaTime && $ahoraTime <= ($fechaCitaTime + $duracionEstimada)) {
+            $cita['estado_visual'] = 'En proceso';
+            $cita['clase_estado'] = 'en-proceso';
+        } elseif ($ahoraTime > ($fechaCitaTime + $duracionEstimada)) {
+            $cita['estado_visual'] = 'Vencida';
+            $cita['clase_estado'] = 'vencida';
+        } else {
+            $cita['estado_visual'] = $estadoActual;
+            $cita['clase_estado'] = strtolower($estadoActual);
+        }
+    } else {
+        $cita['estado_visual'] = $estadoActual;
+        $cita['clase_estado'] = strtolower($estadoActual);
+    }
+}
+unset($cita);
+
 // 2. OBTENER CLIENTES
 $stmt_clientes = $conexion->query("SELECT * FROM cliente ORDER BY idcliente DESC");
 $clientes = $stmt_clientes->fetchAll(PDO::FETCH_ASSOC);
@@ -145,8 +172,8 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                       <td><strong>#<?php echo $cita['id_cita']; ?></strong></td>
                       <td><?php echo htmlspecialchars($cita['cliente_nombre']); ?></td>
                       <td><?php echo htmlspecialchars($cita['empleado_nombre']); ?></td>
-                      <td><?php echo htmlspecialchars($cita['fecha_hora']); ?></td>
-                      <td><span class="status-badge <?php echo strtolower($cita['estado']); ?>"><?php echo htmlspecialchars($cita['estado']); ?></span></td>
+                      <td><?php echo htmlspecialchars($cita['fecha_y_hora']); ?></td>
+                      <td><span class="status-badge <?php echo htmlspecialchars($cita['clase_estado']); ?>"><?php echo htmlspecialchars($cita['estado_visual']); ?></span></td>
                       <td><strong>$<?php echo number_format($cita['total'], 2); ?></strong></td>
                     </tr>
                   <?php endforeach; ?>
