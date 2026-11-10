@@ -9,8 +9,12 @@ document.addEventListener('DOMContentLoaded', function () {
   if (inputFechaCita) {
     const hoyStr = new Date().toISOString().split('T')[0];
     inputFechaCita.min = hoyStr;
-    inputFechaCita.value = hoyStr;
-    fechaSeleccionada = hoyStr;
+    
+    // Forzamos la fecha de hoy si el input está vacío al cargar
+    if (!inputFechaCita.value) {
+      inputFechaCita.value = hoyStr;
+    }
+    fechaSeleccionada = inputFechaCita.value;
 
     inputFechaCita.addEventListener('change', (e) => {
       fechaSeleccionada = e.target.value;
@@ -57,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const resumenDuracion = document.getElementById('resumenDuracion');
   const resumenTotal = document.getElementById('resumenTotal');
   const resumenAnticipo = document.getElementById('resumenAnticipo');
-  const textoLabelPago = document.getElementById('textoLabelPago'); // Etiqueta dinámica del resumen
+  const textoLabelPago = document.getElementById('textoLabelPago');
   const servicioSelect = document.getElementById('servicioSelect');
   const modalidadPagoSelect = document.getElementById('modalidadPago');
   const textoInstruccionPago = document.getElementById('textoInstruccionPago');
@@ -79,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     resumenServicio.textContent = servicioActual.nombre || '—';
-    resumenFecha.textContent = fechaSeleccionada || '—';
+    resumenFecha.textContent = fechaSeleccionada || (inputFechaCita ? inputFechaCita.value : '—');
     resumenHora.textContent = horaSeleccionada || '—';
     resumenDuracion.textContent = servicioActual.duracion || '—';
     resumenTotal.textContent = `$${servicioActual.precio}`;
@@ -213,13 +217,16 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      // Preparar los datos para enviarlos por POST a PHP incluyendo la modalidad de pago
+      // Asegurar fecha actual si por alguna razón no se movió el input
+      const fechaFinal = fechaSeleccionada || (inputFechaCita ? inputFechaCita.value : '');
+
+      // Preparar los datos para enviarlos por POST a PHP
       const datosFormulario = new FormData();
       datosFormulario.append('nombre', nombre.value.trim());
       datosFormulario.append('telefono', telefono.value.trim());
       datosFormulario.append('email', email.value.trim());
       datosFormulario.append('servicio', servicioSelect.value);
-      datosFormulario.append('fecha', fechaSeleccionada);
+      datosFormulario.append('fecha', fechaFinal);
       datosFormulario.append('hora', horaSeleccionada);
       datosFormulario.append('modalidad_pago', modalidadPagoSelect ? modalidadPagoSelect.value : 'anticipo');
 
