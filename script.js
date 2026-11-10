@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ==========================================
-     3. ACTUALIZAR RESUMEN DE CITA
+     3. ACTUALIZAR RESUMEN DE CITA Y MODALIDAD
      ========================================== */
   const resumenServicio = document.getElementById('resumenServicio');
   const resumenFecha = document.getElementById('resumenFecha');
@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const resumenTotal = document.getElementById('resumenTotal');
   const resumenAnticipo = document.getElementById('resumenAnticipo');
   const servicioSelect = document.getElementById('servicioSelect');
+  const modalidadPagoSelect = document.getElementById('modalidadPago');
+  const textoInstruccionPago = document.getElementById('textoInstruccionPago');
 
   let servicioActual = {
     nombre: '',
@@ -80,8 +82,22 @@ document.addEventListener('DOMContentLoaded', function () {
     resumenHora.textContent = horaSeleccionada || '—';
     resumenDuracion.textContent = servicioActual.duracion || '—';
     resumenTotal.textContent = `$${servicioActual.precio}`;
-    const anticipo = Math.round(servicioActual.precio * 0.2);
-    resumenAnticipo.textContent = `$${anticipo}`;
+
+    // Validar si el pago es completo (100%) o solo anticipo (20%)
+    const esCompleto = modalidadPagoSelect && modalidadPagoSelect.value === 'completo';
+    const montoTransferencia = esCompleto ? servicioActual.precio : Math.round(servicioActual.precio * 0.2);
+
+    if (resumenAnticipo) {
+      resumenAnticipo.textContent = `$${montoTransferencia} (${esCompleto ? '100%' : '20%'})`;
+    }
+
+    if (textoInstruccionPago) {
+      if (esCompleto) {
+        textoInstruccionPago.innerHTML = `Realiza tu transferencia por el <strong>100% del servicio ($${montoTransferencia})</strong> para dejar tu cita completamente pagada.`;
+      } else {
+        textoInstruccionPago.innerHTML = `Realiza tu transferencia del <strong>20% de anticipo ($${montoTransferencia})</strong> para apartar tu lugar. El 80% restante se liquida al asistir.`;
+      }
+    }
   }
 
   /* ==========================================
@@ -149,20 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ==========================================
-     7. FORMATEAR NÚMERO DE TARJETA
-     ========================================== */
-  const numeroTarjeta = document.getElementById('numeroTarjeta');
-  if (numeroTarjeta) {
-    numeroTarjeta.addEventListener('input', (e) => {
-      let value = e.target.value.replace(/\D/g, '');
-      value = value.substring(0, 16);
-      const partes = value.match(/.{1,4}/g) || [];
-      e.target.value = partes.join(' ');
-    });
-  }
-
-  /* ==========================================
-     8. VALIDACION Y ENVIO DEL FORMULARIO
+     7. VALIDACION Y ENVIO DEL FORMULARIO
      ========================================== */
   const form = document.getElementById('formCita');
   const mensajeConfirmacion = document.getElementById('mensajeConfirmacion');
@@ -174,12 +177,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const nombre = document.getElementById('nombre');
       const telefono = document.getElementById('telefono');
       const email = document.getElementById('email');
-      const nombreTarjeta = document.getElementById('nombreTarjeta');
-      const numeroTarjeta = document.getElementById('numeroTarjeta');
 
       let valido = true;
 
-      [nombre, telefono, email, nombreTarjeta, numeroTarjeta].forEach(campo => {
+      [nombre, telefono, email].forEach(campo => {
         if (campo) campo.classList.remove('error');
       });
 
@@ -200,25 +201,13 @@ document.addEventListener('DOMContentLoaded', function () {
         servicioSelect.classList.add('error');
         valido = false;
       }
-      const metodoPago = document.getElementById('metodoPago').value;
-      if (metodoPago === 'Tarjeta de crédito/débito') {
-        if (!nombreTarjeta.value.trim()) {
-          nombreTarjeta.classList.add('error');
-          valido = false;
-        }
-        const numLimpio = numeroTarjeta.value.replace(/\s/g, '');
-        if (numLimpio.length < 16) {
-          numeroTarjeta.classList.add('error');
-          valido = false;
-        }
-      }
 
       if (!valido) {
         alert('Por favor, revisa los campos marcados en rojo.');
         return;
       }
 
-      // Preparar los datos para enviarlos por POST a PHP
+      // Preparar los datos para enviarlos por POST a PHP incluyendo la modalidad de pago
       const datosFormulario = new FormData();
       datosFormulario.append('nombre', nombre.value.trim());
       datosFormulario.append('telefono', telefono.value.trim());
@@ -226,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
       datosFormulario.append('servicio', servicioSelect.value);
       datosFormulario.append('fecha', fechaSeleccionada);
       datosFormulario.append('hora', horaSeleccionada);
-      datosFormulario.append('metodoPago', document.getElementById('metodoPago').value);
+      datosFormulario.append('modalidad_pago', modalidadPagoSelect ? modalidadPagoSelect.value : 'anticipo');
 
       // Enviar con fetch a guardar_cita.php
       fetch('guardar_cita.php', {
@@ -248,7 +237,6 @@ document.addEventListener('DOMContentLoaded', function () {
               mensajeConfirmacion.classList.remove('show');
               servicioSelect.selectedIndex = 0;
               servicioActual = { nombre: '', precio: 0, duracion: '' };
-              generarFechas();
               generarHoras();
               actualizarResumen();
             }, 4000);
@@ -268,14 +256,17 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ==========================================
-     9. INICIALIZAR
+     8. INICIALIZAR
      ========================================== */
-  generarFechas();
   generarHoras();
   actualizarResumen();
 
   if (servicioSelect) {
     servicioSelect.addEventListener('change', actualizarResumen);
+  }
+
+  if (modalidadPagoSelect) {
+    modalidadPagoSelect.addEventListener('change', actualizarResumen);
   }
 
 });
