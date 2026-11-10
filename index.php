@@ -225,12 +225,15 @@ session_start();
       <div class="agendamiento-grid">
         <!-- Formulario -->
         <form class="agendamiento-form" id="formCita" novalidate>
-          <!-- Paso 1 -->
+        <!-- Paso 1 -->
           <div class="form-step">
             <h3><span class="step-number">1</span> Elige fecha y horario</h3>
-            <div class="fechas-grid" id="fechasGrid">
-              <!-- JS genera las fechas -->
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label for="inputFechaCita" style="font-weight: 600; margin-bottom: 8px; display: block;">Fecha de la cita</label>
+              <input type="date" id="inputFechaCita" class="form-control" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Inter', sans-serif;">
             </div>
+            
+            <label style="font-weight: 600; margin-bottom: 8px; display: block;">Horarios disponibles</label>
             <div class="horas-grid" id="horasGrid">
               <!-- JS genera las horas -->
             </div>
