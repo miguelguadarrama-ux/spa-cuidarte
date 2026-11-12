@@ -76,6 +76,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             $fechaHora = $fechaTexto . ' ' . $horaLimpia;
         }
+        // BLINDAJE CONTRA CITAS DUPLICADAS A LA MISMA HORA
+        $stmtCheck = $conexion->prepare("SELECT id_cita FROM citas WHERE fecha_y_hora = ? AND estado != 'Cancelada' AND estado != 'Vencida'");
+        $stmtCheck->execute([$fechaHora]);
+        
+        if ($stmtCheck->rowCount() > 0) {
+            echo json_encode(["status" => "error", "message" => "Lo sentimos, este horario ya ha sido reservado. Por favor, elige otra hora o fecha."]);
+            exit;
+        }
 
         // 5. Insertar Cita
         $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Pendiente', ?) RETURNING id_cita");
