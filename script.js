@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
           const data = JSON.parse(texto);
           if (data.status === 'success') {
-            const numeroWhatsApp = "525512345678"; // ⚠️ Cambia este número por el real de tu spa
+            const numeroWhatsApp = "523322530111"; // ⚠️ Cambia este número por el real de tu spa
             const mensajeWp = encodeURIComponent("Hola, acabo de agendar mi cita en Consientt Spa y aquí está mi comprobante de transferencia.");
 
             mensajeConfirmacion.innerHTML = `
