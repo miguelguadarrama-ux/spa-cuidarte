@@ -241,7 +241,17 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
           const data = JSON.parse(texto);
           if (data.status === 'success') {
-            mensajeConfirmacion.textContent = data.message;
+            const numeroWhatsApp = "525512345678"; // ⚠️ Cambia este número por el real de tu spa
+            const mensajeWp = encodeURIComponent("Hola, acabo de agendar mi cita en Consientt Spa y aquí está mi comprobante de transferencia.");
+
+            mensajeConfirmacion.innerHTML = `
+              <strong>${data.message}</strong><br><br>
+              <p style="font-size: 0.9rem; margin-bottom: 10px;">Haz clic en el siguiente botón para enviarnos tu comprobante por WhatsApp y validar tu espacio de inmediato:</p>
+              <a href="https://wa.me/${numeroWhatsApp}?text=${mensajeWp}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.95rem;">
+                <i class="fab fa-whatsapp"></i> Enviar comprobante por WhatsApp
+              </a>
+            `;
+
             mensajeConfirmacion.classList.add('show');
             mensajeConfirmacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -252,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
               servicioActual = { nombre: '', precio: 0, duracion: '' };
               generarHoras();
               actualizarResumen();
-            }, 4000);
+            }, 12000); // 12 segundos para dar tiempo de darle clic al botón de WhatsApp
           } else {
             alert('Error: ' + data.message);
           }
