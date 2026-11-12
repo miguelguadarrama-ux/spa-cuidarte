@@ -1,16 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* ==========================================
-     1. SELECTOR DE FECHA LIBRE (Mes en curso y futuros)
-     ========================================== */
   const inputFechaCita = document.getElementById('inputFechaCita');
   let fechaSeleccionada = null;
 
   if (inputFechaCita) {
     const hoyStr = new Date().toISOString().split('T')[0];
     inputFechaCita.min = hoyStr;
-    
-    // Forzamos la fecha de hoy si el input está vacío al cargar
     if (!inputFechaCita.value) {
       inputFechaCita.value = hoyStr;
     }
@@ -22,9 +17,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  /* ==========================================
-     2. GENERAR HORAS DISPONIBLES
-     ========================================== */
   const horasGrid = document.getElementById('horasGrid');
   const horasDisponibles = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30'];
   let horaSeleccionada = null;
@@ -52,9 +44,6 @@ document.addEventListener('DOMContentLoaded', function () {
     actualizarResumen();
   }
 
-  /* ==========================================
-     3. ACTUALIZAR RESUMEN DE CITA Y MODALIDAD
-     ========================================== */
   const resumenServicio = document.getElementById('resumenServicio');
   const resumenFecha = document.getElementById('resumenFecha');
   const resumenHora = document.getElementById('resumenHora');
@@ -66,11 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const modalidadPagoSelect = document.getElementById('modalidadPago');
   const textoInstruccionPago = document.getElementById('textoInstruccionPago');
 
-  let servicioActual = {
-    nombre: '',
-    precio: 0,
-    duracion: ''
-  };
+  let servicioActual = { nombre: '', precio: 0, duracion: '' };
 
   function actualizarResumen() {
     const opcion = servicioSelect.options[servicioSelect.selectedIndex];
@@ -88,11 +73,9 @@ document.addEventListener('DOMContentLoaded', function () {
     resumenDuracion.textContent = servicioActual.duracion || '—';
     resumenTotal.textContent = `$${servicioActual.precio}`;
 
-    // Validar si el pago es completo (100%) o solo anticipo (20%)
     const esCompleto = modalidadPagoSelect && modalidadPagoSelect.value === 'completo';
     const montoTransferencia = esCompleto ? servicioActual.precio : Math.round(servicioActual.precio * 0.2);
 
-    // Cambiar texto y monto dinámicamente en el resumen de la derecha
     if (textoLabelPago) {
       textoLabelPago.textContent = esCompleto ? 'Total a transferir (100%)' : 'Anticipo a pagar (20%)';
     }
@@ -110,9 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  /* ==========================================
-     4. FILTROS DE SERVICIOS
-     ========================================== */
+  // Filtros de servicios
   const tabs = document.querySelectorAll('#serviciosTabs button');
   const serviciosItems = document.querySelectorAll('.servicio-item');
 
@@ -131,11 +112,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  /* ==========================================
-     5. ENLACES "RESERVAR" DE LAS TARJETAS RITUALES
-     ========================================== */
   document.querySelectorAll('.ritual-link').forEach(link => {
-    link.addEventListener('click', (e) => {
+    link.addEventListener('click', () => {
       const servicio = link.dataset.servicio;
       if (servicio) {
         for (let i = 0; i < servicioSelect.options.length; i++) {
@@ -149,34 +127,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  /* ==========================================
-     6. BOTONES QUE LLEVAN A AGENDAR
-     ========================================== */
-  const botonesCita = [
-    'btnHeaderCita',
-    'btnHeroCita',
-    'btnHeroCard',
-    'btnExperienciaCita'
-  ];
-  botonesCita.forEach(id => {
-    const btn = document.getElementById(id);
-    if (btn) {
-      btn.addEventListener('click', () => {
-        document.getElementById('citas').scrollIntoView({ behavior: 'smooth' });
-      });
-    }
-  });
-
-  const btnVerPrecios = document.getElementById('btnVerPrecios');
-  if (btnVerPrecios) {
-    btnVerPrecios.addEventListener('click', () => {
-      document.getElementById('precios').scrollIntoView({ behavior: 'smooth' });
-    });
-  }
-
-  /* ==========================================
-     7. VALIDACION Y ENVIO DEL FORMULARIO
-     ========================================== */
   const form = document.getElementById('formCita');
   const mensajeConfirmacion = document.getElementById('mensajeConfirmacion');
 
@@ -194,33 +144,19 @@ document.addEventListener('DOMContentLoaded', function () {
         if (campo) campo.classList.remove('error');
       });
 
-      if (!nombre.value.trim()) {
-        nombre.classList.add('error');
-        valido = false;
-      }
-      if (!telefono.value.trim() || telefono.value.trim().length < 8) {
-        telefono.classList.add('error');
-        valido = false;
-      }
+      if (!nombre.value.trim()) { nombre.classList.add('error'); valido = false; }
+      if (!telefono.value.trim() || telefono.value.trim().length < 8) { telefono.classList.add('error'); valido = false; }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!email.value.trim() || !emailRegex.test(email.value.trim())) {
-        email.classList.add('error');
-        valido = false;
-      }
-      if (!servicioSelect.value) {
-        servicioSelect.classList.add('error');
-        valido = false;
-      }
+      if (!email.value.trim() || !emailRegex.test(email.value.trim())) { email.classList.add('error'); valido = false; }
+      if (!servicioSelect.value) { servicioSelect.classList.add('error'); valido = false; }
 
       if (!valido) {
         alert('⚠️ Te faltan campos por rellenar o hay información inválida. Por favor, revisa los campos marcados en rojo.');
         return;
       }
 
-      // Asegurar fecha actual si por alguna razón no se movió el input
       const fechaFinal = fechaSeleccionada || (inputFechaCita ? inputFechaCita.value : '');
 
-      // Preparar los datos para enviarlos por POST a PHP
       const datosFormulario = new FormData();
       datosFormulario.append('nombre', nombre.value.trim());
       datosFormulario.append('telefono', telefono.value.trim());
@@ -230,7 +166,6 @@ document.addEventListener('DOMContentLoaded', function () {
       datosFormulario.append('hora', horaSeleccionada);
       datosFormulario.append('modalidad_pago', modalidadPagoSelect ? modalidadPagoSelect.value : 'anticipo');
 
-      // Enviar con fetch a guardar_cita.php
       fetch('guardar_cita.php', {
         method: 'POST',
         body: datosFormulario
@@ -241,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
           const data = JSON.parse(texto);
           if (data.status === 'success') {
-            const numeroWhatsApp = "523322530111"; // ⚠️ Cambia este número por el real de tu spa
+            const numeroWhatsApp = "523322530111";
             const mensajeWp = encodeURIComponent("Hola, acabo de agendar mi cita en Consientt Spa y aquí está mi comprobante de transferencia.");
 
             mensajeConfirmacion.innerHTML = `
@@ -262,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
               servicioActual = { nombre: '', precio: 0, duracion: '' };
               generarHoras();
               actualizarResumen();
-            }, 12000); // 12 segundos para dar tiempo de darle clic al botón de WhatsApp
+            }, 15000);
           } else {
             alert('Error: ' + data.message);
           }
@@ -278,18 +213,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  /* ==========================================
-     8. INICIALIZAR
-     ========================================== */
   generarHoras();
   actualizarResumen();
 
-  if (servicioSelect) {
-    servicioSelect.addEventListener('change', actualizarResumen);
-  }
-
-  if (modalidadPagoSelect) {
-    modalidadPagoSelect.addEventListener('change', actualizarResumen);
-  }
+  if (servicioSelect) servicioSelect.addEventListener('change', actualizarResumen);
+  if (modalidadPagoSelect) modalidadPagoSelect.addEventListener('change', actualizarResumen);
 
 });
