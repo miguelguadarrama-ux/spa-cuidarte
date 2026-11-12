@@ -258,7 +258,7 @@ session_start();
               </div>
             </div>
 
-            <!-- Paso 3 -->
+           <!-- Paso 3 -->
             <div class="form-step">
               <h3><span class="step-number">3</span> Servicio y pago</h3>
               
@@ -284,10 +284,15 @@ session_start();
 
               <!-- Caja informativa con datos de transferencia -->
               <div style="background: #fdf8f0; border: 1px solid #e6d5bc; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                <p style="font-weight: 600; color: #b8860b; margin-bottom: 5px;"><i class="fas fa-university"></i> Pago por Transferencia Bancaria</p>
-                <p style="font-size: 0.88rem; color: #555; margin: 0; line-height: 1.4;" id="textoInstruccionPago">
+                <p style="font-weight: 600; color: #b8860b; margin-bottom: 5px;"><i class="fas fa-university"></i> Datos para Transferencia Bancaria</p>
+                <p style="font-size: 0.88rem; color: #555; margin-bottom: 8px;" id="textoInstruccionPago">
                   Realiza tu transferencia del <strong>20% de anticipo</strong> para apartar tu lugar. El resto se liquida al asistir.
                 </p>
+                <div style="font-size: 0.85rem; color: #444; background: #fff; padding: 10px; border-radius: 6px; border: 1px dashed #d4bc96;">
+                  <strong>Banco:</strong> BBVA / Santander<br>
+                  <strong>CLABE:</strong> 012345678901234567<br>
+                  <strong>Titular:</strong> Consientt Spa
+                </div>
               </div>
             </div>
 
