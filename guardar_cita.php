@@ -12,9 +12,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $servicio = trim($_POST['servicio'] ?? ''); 
     $fechaTexto = trim($_POST['fecha'] ?? '');
     $hora = trim($_POST['hora'] ?? '');
-    
-    // Recogemos la modalidad de pago enviada desde el JS ('anticipo' o 'completo')
     $modalidadPago = trim($_POST['modalidad_pago'] ?? 'anticipo');
+    
+    // 1. 📌 AQUÍ RECOGEMOS EL EMPLEADO SI EL CLIENTE LO ELIGIó (o asignamos uno por defecto)
+    $id_empleado = $_POST['id_empleado'] ?? null;
 
     if (empty($nombre) || empty($telefono) || empty($email) || empty($servicio)) {
         echo json_encode(["status" => "error", "message" => "Faltan campos obligatorios."]);
@@ -51,17 +52,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $id_servicio = $datosServicio['id_servicio'];
         $total = $datosServicio['precio'];
         
-        // Calcular el monto a pagar según la modalidad elegida
         if ($modalidadPago === 'completo') {
-            $montoPago = $total; // 100%
+            $montoPago = $total; 
             $metodoTexto = 'Transferencia (Pago Completo)';
         } else {
-            $montoPago = $total * 0.20; // 20% anticipo
+            $montoPago = $total * 0.20; 
             $metodoTexto = 'Transferencia (Anticipo 20%)';
         }
 
-        // 3. Asignar empleado válido
-        $id_empleado = $_POST['id_empleado'] ?? null;
+        // 3. Asignar empleado válido si no se envió uno
         if (!$id_empleado) {
             $stmtEmp = $conexion->query("SELECT id_empleado FROM empleados ORDER BY id_empleado ASC LIMIT 1");
             $empValido = $stmtEmp->fetch();
@@ -76,16 +75,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             $fechaHora = $fechaTexto . ' ' . $horaLimpia;
         }
-        // BLINDAJE CONTRA CITAS DUPLICADAS A LA MISMA HORA
-        $stmtCheck = $conexion->prepare("SELECT id_cita FROM citas WHERE fecha_y_hora = ? AND estado != 'Cancelada' AND estado != 'Vencida'");
-        $stmtCheck->execute([$fechaHora]);
+
+        // 2. 📌 AQUí VALIDAMOS SI ESE EMPLEADO ESPECÍFICO YA TIENE CITA EN ESE HORARIO
+        $stmtCheck = $conexion->prepare("SELECT id_cita FROM citas WHERE fecha_y_hora = ? AND id_empleado = ? AND estado != 'Cancelada' AND estado != 'Vencida'");
+        $stmtCheck->execute([$fechaHora, $id_empleado]);
         
         if ($stmtCheck->rowCount() > 0) {
-            echo json_encode(["status" => "error", "message" => "Lo sentimos, este horario ya ha sido reservado. Por favor, elige otra hora o fecha."]);
+            echo json_encode(["status" => "error", "message" => "Lo sentimos, el profesional seleccionado ya tiene una cita agendada en este horario. Elige otra hora."]);
             exit;
         }
 
-        // 5. Insertar Cita
+        // 5. Insertar Cita (3. 📌 AQUÍ USAMOS EL $id_empleado EN VEZ DE DEJARLO FIJO)
         $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Pendiente', ?) RETURNING id_cita");
         $insertCita->execute([$id_cliente, $id_empleado, $fechaHora, $total]);
         $filaCita = $insertCita->fetch();
@@ -95,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $insertDetalle = $conexion->prepare("INSERT INTO detalle_citas (id_cita, id_servicio, precio_unitario) VALUES (?, ?, ?)");
         $insertDetalle->execute([$id_cita, $id_servicio, $total]);
 
-        // 7. Registrar el pago (Anticipo o Completo)
+        // 7. Registrar el pago
         $insertPago = $conexion->prepare("INSERT INTO pagos (id_cita, monto, metodo_pago) VALUES (?, ?, ?)");
         $insertPago->execute([$id_cita, $montoPago, $metodoTexto]);
 
