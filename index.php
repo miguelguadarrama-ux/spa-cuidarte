@@ -259,6 +259,24 @@ session_start();
             </div>
 
            <!-- Paso 3 -->
+            <!-- Selector de Empleado / Especialista (Para el futuro o ya activo) -->
+<div class="form-group" style="margin-bottom: 15px;">
+  <label for="id_empleado">Especialista deseado</label>
+  <select id="id_empleado" name="id_empleado" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+    <option value="" selected>Asignar automáticamente (El primero disponible)</option>
+    <?php
+      // Consultamos los empleados directamente de tu base de datos para mostrarlos en el menú
+      try {
+          $stmtEmpleadosTab = $conexion->query("SELECT id_empleado, nombre FROM empleados ORDER BY nombre ASC");
+          while ($rowEmp = $stmtEmpleadosTab->fetch(PDO::FETCH_ASSOC)) {
+              echo '<option value="' . $rowEmp['id_empleado'] . '">' . htmlspecialchars($rowEmp['nombre']) . '</option>';
+          }
+      } catch (Exception $e) {
+          // Si llega a haber algún detalle con la conexión en este punto, no rompe la página
+      }
+    ?>
+  </select>
+</div>
             <div class="form-step">
               <h3><span class="step-number">3</span> Servicio y pago</h3>
               
