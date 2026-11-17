@@ -267,15 +267,22 @@ include 'conexion.php';
             <div class="form-step">
               <h3><span class="step-number">3</span> Servicio, especialista y pago</h3>
               
-              <!-- Selector de Servicio -->
+          <!-- Selector de Servicio (Dinámico desde Neon) -->
               <div class="form-group" style="margin-bottom: 15px;">
                 <label for="servicioSelect">Servicio deseado</label>
-                <select id="servicioSelect" required>
+                <select id="servicioSelect" name="id_servicio" required>
                   <option value="" disabled selected>Selecciona un servicio</option>
-                  <option value="Pedicure Clínico Completo" data-precio="650" data-duracion="60 min">Pedicure Clínico Completo - $650</option>
-                  <option value="Spa de Hidratación Profunda" data-precio="780" data-duracion="75 min">Spa de Hidratación Profunda - $780</option>
-                  <option value="Baile de Manos - Manicure Ruso" data-precio="480" data-duracion="50 min">Baile de Manos - Manicure Ruso - $480</option>
-                  <option value="Pedicure Spa + Gelish" data-precio="950" data-duracion="90 min">Pedicure Spa + Gelish - $950</option>
+                  <?php
+                  // Asegúrate de incluir la conexión si no está arriba de tu archivo
+                  include 'conexion.php'; 
+                  $stmt_srv = $conexion->query("SELECT * FROM servicios ORDER BY nombre ASC");
+                  while ($srv = $stmt_srv->fetch(PDO::FETCH_ASSOC)) {
+                      // Guardamos el precio y duración en data-atributos por si tu JavaScript los usa para calcular totales o tiempos
+                      echo '<option value="' . $srv['id_servicio'] . '" data-precio="' . $srv['precio'] . '" data-duracion="' . $srv['duracion'] . ' min">' 
+                           . htmlspecialchars($srv['nombre']) . ' — $' . number_format($srv['precio'], 2) . ' (' . $srv['duracion'] . ' mins)' 
+                           . '</option>';
+                  }
+                  ?>
                 </select>
               </div>
 
