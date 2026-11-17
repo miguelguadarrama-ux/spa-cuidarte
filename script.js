@@ -218,6 +218,11 @@ document.addEventListener('DOMContentLoaded', function () {
       datosFormulario.append('hora', horaSeleccionada);
       datosFormulario.append('modalidad_pago', modalidadPagoSelect ? modalidadPagoSelect.value : 'anticipo');
       datosFormulario.append('id_empleado', empleadoSelect ? empleadoSelect.value : '');
+      // 📌 NUEVO: Adjuntar el archivo del comprobante al FormData
+      const inputComprobante = document.getElementById('comprobante');
+      if (inputComprobante && inputComprobante.files[0]) {
+          datosFormulario.append('comprobante', inputComprobante.files[0]);
+      }
 
       fetch('guardar_cita.php', {
         method: 'POST',
