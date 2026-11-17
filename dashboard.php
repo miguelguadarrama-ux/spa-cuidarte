@@ -227,11 +227,11 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </section>
 
-        <!-- PESTAÑA: CLIENTES -->
+       <!-- PESTAÑA: CLIENTES -->
         <section id="tab-clientes" class="dashboard-tab">
           <div class="action-bar">
             <h3>Registros de <code>clientes</code></h3>
-            <button class="btn-action"><i class="fas fa-plus"></i> Añadir Cliente</button>
+            <button class="btn-action" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Añadir Cliente</button>
           </div>
           <div class="table-wrapper">
             <table>
@@ -241,17 +241,37 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                   <th>Nombre Completo</th>
                   <th>Teléfono</th>
                   <th>Correo Electrónico</th>
+                  <th>Acciones</th> <!-- 📌 NUEVA COLUMNA -->
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($clientes as $cli): ?>
-                  <tr>
-                    <td><strong>#<?php echo $cli['idcliente']; ?></strong></td>
-                    <td><?php echo htmlspecialchars($cli['nombre']); ?></td>
-                    <td><?php echo htmlspecialchars($cli['telefono'] ?? 'N/D'); ?></td>
-                    <td><?php echo htmlspecialchars($cli['correo']); ?></td>
-                  </tr>
-                <?php endforeach; ?>
+                <?php if (empty($clientes)): ?>
+                  <tr><td colspan="5" style="text-align: center;">No hay clientes registrados.</td></tr>
+                <?php else: ?>
+                  <?php foreach ($clientes as $cli): ?>
+                    <tr>
+                      <td><strong>#<?php echo $cli['idcliente']; ?></strong></td>
+                      <td><?php echo htmlspecialchars($cli['nombre']); ?></td>
+                      <td><?php echo htmlspecialchars($cli['telefono'] ?? 'N/D'); ?></td>
+                      <td><?php echo htmlspecialchars($cli['correo']); ?></td>
+                      
+                      <!-- 📌 BOTONES DE ACCIÓN PARA CLIENTES -->
+                      <td style="display: flex; gap: 6px; align-items: center;">
+                        
+                        <!-- Botón para Editar (puedes enlazarlo a un script de edición) -->
+                        <a href="editar_cliente.php?id=<?php echo $cli['idcliente']; ?>" title="Editar Cliente" style="background: #C9A96E; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <!-- Botón para Eliminar / Dar de baja -->
+                        <a href="eliminar_cliente.php?id=<?php echo $cli['idcliente']; ?>" title="Dar de baja" onclick="return confirm('¿Estás seguro de eliminar a este cliente? Se borrarán sus datos del sistema.');" style="background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
