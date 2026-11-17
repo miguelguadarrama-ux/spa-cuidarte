@@ -19,7 +19,7 @@ $es_acceso_total = ($rol === 'superadmin' || $rol === 'admin' || $correo === 'mi
 
 // 1. OBTENER CITAS (Filtradas por rol)
 if ($es_acceso_total) {
-    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total 
+    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total,c.comprobante_url 
                   FROM citas c
                   JOIN cliente cl ON c.id_cliente = cl.idcliente
                   JOIN empleados e ON c.id_empleado = e.id_empleado
@@ -27,7 +27,7 @@ if ($es_acceso_total) {
     $stmt_citas = $conexion->prepare($sql_citas);
     $stmt_citas->execute();
 } else {
-    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total 
+    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total, c.comprobante_url
                   FROM citas c
                   JOIN cliente cl ON c.id_cliente = cl.idcliente
                   JOIN empleados e ON c.id_empleado = e.id_empleado
