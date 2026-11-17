@@ -38,7 +38,7 @@ if ($es_acceso_total) {
     $stmt_citas = $conexion->prepare($sql_citas);
     $stmt_citas->execute([$empleado_id]);
 }
-$citas = $stmt_citas->fetchAll(PDO::FETCH_ASSOC);
+$citas = $stmt_citas->fetchAll(PDO::FETCH_ASSOC);;
 
 // Lógica para calcular estado dinámico (En proceso o Vencida)
 $ahoraTime = time();
@@ -148,7 +148,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
 
       <div class="content-body">
         
-       <!-- PESTAÑA: CITAS -->
+      <!-- PESTAÑA: CITAS -->
         <section id="tab-citas" class="dashboard-tab active">
           <div class="action-bar">
             <h3>Registros de <code>citas</code></h3>
@@ -179,10 +179,10 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                       <td><span class="status-badge <?php echo htmlspecialchars($cita['clase_estado']); ?>"><?php echo htmlspecialchars($cita['estado_visual']); ?></span></td>
                       <td><strong>$<?php echo number_format($cita['total'], 2); ?></strong></td>
                       
-                      <!-- 📌 BOTONES DE ACCIÓN POR CITA -->
-                      <td style="display: flex; gap: 6px; align-items: center;">
+                     <!-- 📌 BOTONES DE ACCIÓN POR CITA -->
+                      <td style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                         
-                        <!-- Ver Comprobante Base64 -->
+                        <!-- 1. Ver Comprobante Base64 -->
                         <?php if (!empty($cita['comprobante_url'])): ?>
                             <button type="button" onclick="verComprobante('<?php echo $cita['comprobante_url']; ?>')" class="btn-accion" title="Ver Comprobante de Pago" style="background: #C9A96E; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer;">
                                 <i class="fas fa-file-image"></i>
@@ -191,17 +191,32 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                             <span style="font-size: 0.75rem; color: #999;">Sin comprobante</span>
                         <?php endif; ?>
 
-                        <!-- Aprobar si está Por Validar -->
-                        <?php if ($cita['estado'] === 'Por Validar'): ?>
+                        <!-- 2. Aprobar si está Por Validar -->
+                        <?php if (strcasecmp(trim($cita['estado']), 'Por Validar') === 0): ?>
                             <a href="cambiar_estado.php?id=<?php echo $cita['id_cita']; ?>&estado=Confirmada" title="Aprobar Cita" style="background: #28a745; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
                                 <i class="fas fa-check"></i>
                             </a>
                         <?php endif; ?>
 
-                        <!-- Cancelar -->
-                        <a href="cambiar_estado.php?id=<?php echo $cita['id_cita']; ?>&estado=Cancelada" title="Cancelar Cita" onclick="return confirm('¿Seguro que deseas cancelar esta cita?');" style="background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
-                            <i class="fas fa-times"></i>
-                        </a>
+                        <!-- 3. Si la cita ya está Confirmada o Pendiente: Opciones de control de asistencia -->
+                        <?php if (strcasecmp(trim($cita['estado']), 'Confirmada') === 0 || strcasecmp(trim($cita['estado']), 'Pendiente') === 0): ?>
+                            <!-- Marcar como Atendida -->
+                            <a href="cambiar_estado.php?id=<?php echo $cita['id_cita']; ?>&estado=Completada" title="Marcar como Atendida" style="background: #17a2b8; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
+                                <i class="fas fa-user-check"></i> Atendida
+                            </a>
+
+                            <!-- Marcar como No Asistió -->
+                            <a href="cambiar_estado.php?id=<?php echo $cita['id_cita']; ?>&estado=No Asistió" title="Cliente no se presentó" onclick="return confirm('¿Marcar esta cita como que el cliente no se presentó?');" style="background: #6c757d; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
+                                <i class="fas fa-user-times"></i>
+                            </a>
+                        <?php endif; ?>
+
+                        <!-- 4. Cancelar (Único y limpio: disponible si no está completada o cancelada previamente) -->
+                        <?php if (strcasecmp(trim($cita['estado']), 'Completada') !== 0 && strcasecmp(trim($cita['estado']), 'Cancelada') !== 0): ?>
+                            <a href="cambiar_estado.php?id=<?php echo $cita['id_cita']; ?>&estado=Cancelada" title="Cancelar Cita" onclick="return confirm('¿Seguro que deseas cancelar esta cita?');" style="background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        <?php endif; ?>
 
                       </td>
                     </tr>
@@ -338,7 +353,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
     const menuItems = document.querySelectorAll('.menu-item');
     const tabs = document.querySelectorAll('.dashboard-tab');
     const tabTitle = document.getElementById('current-tab-title');
-    // Función para abrir el comprobante guardado en Base64
+// Función para abrir el comprobante guardado en Base64
     function verComprobante(base64Data) {
         let ventana = window.open();
         ventana.document.write(`
