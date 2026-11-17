@@ -487,6 +487,14 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
     const menuItems = document.querySelectorAll('.menu-item');
     const tabs = document.querySelectorAll('.dashboard-tab');
     const tabTitle = document.getElementById('current-tab-title');    
+   
+    function abrirModalServicio() {
+        document.getElementById('modalServicio').style.display = 'flex';
+    }
+
+    function cerrarModalServicio() {
+        document.getElementById('modalServicio').style.display = 'none';
+    } 
       
     function abrirModalEmpleado() {
         document.getElementById('modalEmpleado').style.display = 'flex';
