@@ -381,11 +381,11 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </section>
 
-        <!-- PESTAÑA: SERVICIOS -->
+       <!-- PESTAÑA: SERVICIOS -->
         <section id="tab-servicios" class="dashboard-tab">
           <div class="action-bar">
             <h3>Registros de <code>servicios</code></h3>
-            <button class="btn-action"><i class="fas fa-plus"></i> Agregar Servicio</button>
+            <button class="btn-action" onclick="abrirModalServicio()"><i class="fas fa-plus"></i> Agregar Servicio</button>
           </div>
           <div class="table-wrapper">
             <table>
@@ -394,16 +394,36 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                   <th>ID Servicio</th>
                   <th>Nombre del Servicio</th>
                   <th>Precio Base</th>
+                  <th>Acciones</th> <!-- 📌 NUEVA COLUMNA -->
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($servicios as $ser): ?>
-                  <tr>
-                    <td><strong>#<?php echo $ser['id_servicio']; ?></strong></td>
-                    <td><?php echo htmlspecialchars($ser['nombre']); ?></td>
-                    <td><strong>$<?php echo number_format($ser['precio'], 2); ?></strong></td>
-                  </tr>
-                <?php endforeach; ?>
+                <?php if (empty($servicios)): ?>
+                  <tr><td colspan="4" style="text-align: center;">No hay servicios registrados.</td></tr>
+                <?php else: ?>
+                  <?php foreach ($servicios as $ser): ?>
+                    <tr>
+                      <td><strong>#<?php echo $ser['id_servicio']; ?></strong></td>
+                      <td><?php echo htmlspecialchars($ser['nombre']); ?></td>
+                      <td><strong>$<?php echo number_format($ser['precio'], 2); ?></strong></td>
+                      
+                      <!-- 📌 BOTONES DE ACCIÓN PARA SERVICIOS -->
+                      <td style="display: flex; gap: 6px; align-items: center;">
+                        
+                        <!-- Botón Editar -->
+                        <a href="editar_servicio.php?id=<?php echo $ser['id_servicio']; ?>" title="Editar Servicio" style="background: #C9A96E; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <!-- Botón Eliminar -->
+                        <a href="eliminar_servicio.php?id=<?php echo $ser['id_servicio']; ?>" title="Eliminar Servicio" onclick="return confirm('¿Estás seguro de eliminar este servicio?');" style="background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
