@@ -65,12 +65,11 @@ if (!$empleado) {
                 <label style="display: block; font-weight: 600; margin-bottom: 5px;">Correo Electrónico</label>
                 <input type="email" name="correo" value="<?php echo htmlspecialchars($empleado['correo']); ?>" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
             </div>
+           <!-- Rol fijo como Admin en edición -->
             <div style="margin-bottom: 20px;">
                 <label style="display: block; font-weight: 600; margin-bottom: 5px;">Rol</label>
-                <select name="rol" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background: white;">
-                    <option value="admin" <?php echo ($empleado['rol'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
-                    <option value="empleado" <?php echo ($empleado['rol'] === 'empleado') ? 'selected' : ''; ?>>Empleado</option>
-                </select>
+                <input type="text" value="Admin" disabled style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background: #f5f5f5; color: #555;">
+                <input type="hidden" name="rol" value="admin">
             </div>
             <div style="display: flex; gap: 10px;">
                 <button type="submit" style="background: #3a1e3a; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 1;">Guardar Cambios</button>
