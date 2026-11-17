@@ -302,11 +302,11 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </section>
 
-        <!-- PESTAÑA: EMPLEADOS -->
+     <!-- PESTAÑA: EMPLEADOS -->
         <section id="tab-empleados" class="dashboard-tab">
           <div class="action-bar">
             <h3>Registros de <code>empleados</code></h3>
-            <button class="btn-action"><i class="fas fa-plus"></i> Registrar Empleado</button>
+            <button class="btn-action" onclick="abrirModalEmpleado()"><i class="fas fa-plus"></i> Registrar Empleado</button>
           </div>
           <div class="table-wrapper">
             <table>
@@ -316,17 +316,37 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                   <th>Nombre</th>
                   <th>Correo</th>
                   <th>Rol</th>
+                  <th>Acciones</th> <!-- 📌 NUEVA COLUMNA -->
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($empleados as $emp): ?>
-                  <tr>
-                    <td><strong>#<?php echo $emp['id_empleado']; ?></strong></td>
-                    <td><?php echo htmlspecialchars($emp['nombre']); ?></td>
-                    <td><?php echo htmlspecialchars($emp['correo']); ?></td>
-                    <td><?php echo htmlspecialchars($emp['rol']); ?></td>
-                  </tr>
-                <?php endforeach; ?>
+                <?php if (empty($empleados)): ?>
+                  <tr><td colspan="5" style="text-align: center;">No hay empleados registrados.</td></tr>
+                <?php else: ?>
+                  <?php foreach ($empleados as $emp): ?>
+                    <tr>
+                      <td><strong>#<?php echo $emp['id_empleado']; ?></strong></td>
+                      <td><?php echo htmlspecialchars($emp['nombre']); ?></td>
+                      <td><?php echo htmlspecialchars($emp['correo']); ?></td>
+                      <td><?php echo htmlspecialchars($emp['rol']); ?></td>
+                      
+                      <!-- 📌 BOTONES DE ACCIÓN PARA EMPLEADOS -->
+                      <td style="display: flex; gap: 6px; align-items: center;">
+                        
+                        <!-- Botón Editar -->
+                        <a href="editar_empleado.php?id=<?php echo $emp['id_empleado']; ?>" title="Editar Empleado" style="background: #C9A96E; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <!-- Botón Eliminar / Dar de baja -->
+                        <a href="eliminar_empleado.php?id=<?php echo $emp['id_empleado']; ?>" title="Dar de baja" onclick="return confirm('¿Estás seguro de dar de baja a este empleado?');" style="background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
