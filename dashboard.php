@@ -96,7 +96,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-    <!-- Modal Agregar Servicio -->
+<!-- Modal Agregar Servicio -->
 <div id="modalServicio" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
     <div style="background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
         <h3 style="margin-bottom: 20px; font-family: 'Plus Jakarta Sans', sans-serif; color: #271a2e;">Agregar Nuevo Servicio</h3>
@@ -104,6 +104,11 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
             <div style="margin-bottom: 15px;">
                 <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Nombre del Servicio</label>
                 <input type="text" name="nombre" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            </div>
+            <!-- 📌 NUEVO CAMPO DE DURACIÓN -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Duración (Minutos)</label>
+                <input type="number" name="duracion" required placeholder="Ej. 60" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
             </div>
             <div style="margin-bottom: 20px;">
                 <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Precio Base ($)</label>
