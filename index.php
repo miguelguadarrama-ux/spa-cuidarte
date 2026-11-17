@@ -314,6 +314,14 @@ include 'conexion.php';
                   <strong>Titular:</strong> Consientt Spa
                 </div>
               </div>
+              <!-- 📌 NUEVO: Campo para subir el comprobante de pago -->
+              <div class="form-group" style="margin-bottom: 15px;">
+                <label for="comprobante" style="font-weight: 600; display: block; margin-bottom: 5px;">
+                  <i class="fas fa-file-upload"></i> Sube tu comprobante de transferencia
+                </label>
+                <input type="file" id="comprobante" name="comprobante" accept="image/*,.pdf" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background: #fff; font-family: 'Inter', sans-serif;">
+                <small style="color: #666; font-size: 0.8rem; display: block; margin-top: 4px;">Formatos aceptados: Imagen (JPG, PNG) o PDF. (Máx. 5MB)</small>
+              </div>
             </div>
 
             <div class="mensaje-confirmacion" id="mensajeConfirmacion">
@@ -447,4 +455,4 @@ include 'conexion.php';
   <!-- JS -->
   <script src="script.js"></script>
 </body>
-</html>
+</html> 
