@@ -398,6 +398,14 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
     const menuItems = document.querySelectorAll('.menu-item');
     const tabs = document.querySelectorAll('.dashboard-tab');
     const tabTitle = document.getElementById('current-tab-title');
+      // Funciones para abrir y cerrar el modal de clientes
+    function abrirModalCliente() {
+        document.getElementById('modalCliente').style.display = 'flex';
+    }
+
+    function cerrarModalCliente() {
+        document.getElementById('modalCliente').style.display = 'none';
+    }
 // Función para abrir el comprobante guardado en Base64
     function verComprobante(base64Data) {
         let ventana = window.open();
