@@ -13,7 +13,7 @@ $id_cita = $_GET['id'] ?? null;
 $nuevo_estado = $_GET['estado'] ?? null;
 
 // Validar que vengan los datos obligatorios y que el estado sea seguro
-$estadosPermitidos = ['Confirmada', 'Cancelada', 'Por Validar', 'Completada'];
+$estadosPermitidos = ['Confirmada', 'Cancelada', 'Por Validar', 'Completada', 'No Asistió', 'Vencida'];
 
 if ($id_cita && $nuevo_estado && in_array($nuevo_estado, $estadosPermitidos)) {
     try {
