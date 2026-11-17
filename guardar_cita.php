@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $hora = trim($_POST['hora'] ?? '');
     $modalidadPago = trim($_POST['modalidad_pago'] ?? 'anticipo');
     
-    // 1. 📌 AQUÍ RECOGEMOS EL EMPLEADO SI EL CLIENTE LO ELIGIó (o asignamos uno por defecto)
+    // Recoger el empleado seleccionado (o se asignará por defecto)
     $id_empleado = $_POST['id_empleado'] ?? null;
 
     if (empty($nombre) || empty($telefono) || empty($email) || empty($servicio)) {
@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $montoPago = $total; 
             $metodoTexto = 'Transferencia (Pago Completo)';
         } else {
-            $montoPago = $total * 0.20; 
+            $montoPago = $total * 0.20; // Anticipo del 20%
             $metodoTexto = 'Transferencia (Anticipo 20%)';
         }
 
@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $fechaHora = $fechaTexto . ' ' . $horaLimpia;
         }
 
-        // 2. 📌 AQUí VALIDAMOS SI ESE EMPLEADO ESPECÍFICO YA TIENE CITA EN ESE HORARIO
+        // 5. Validar si ese empleado específico ya tiene cita en ese horario
         $stmtCheck = $conexion->prepare("SELECT id_cita FROM citas WHERE fecha_y_hora = ? AND id_empleado = ? AND estado != 'Cancelada' AND estado != 'Vencida'");
         $stmtCheck->execute([$fechaHora, $id_empleado]);
         
@@ -85,21 +85,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         }
 
-        // 5. Insertar Cita (3. 📌 AQUÍ USAMOS EL $id_empleado EN VEZ DE DEJARLO FIJO)
-        $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Pendiente', ?) RETURNING id_cita");
+        // 6. PROCESAR Y CONVERTIR EL COMPROBANTE A BASE64 (Data URI)
+        $comprobanteBase64 = null;
+        if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
+            $fileTmpPath = $_FILES['comprobante']['tmp_name'];
+            $fileName = $_FILES['comprobante']['name'];
+            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
+            
+            if (in_array($fileExtension, $allowedExtensions)) {
+                $fileData = file_get_contents($fileTmpPath);
+                if ($fileData !== false) {
+                    // Detectar tipo MIME real del archivo (ej. image/jpeg, image/png, application/pdf)
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mimeType = finfo_file($finfo, $fileTmpPath);
+                    finfo_close($finfo);
+                    
+                    // Empaquetar como Data URI de Base64 para guardarlo directo en la BD
+                    $comprobanteBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($fileData);
+                }
+            }
+        }
+
+        if (!$comprobanteBase64) {
+            echo json_encode(["status" => "error", "message" => "Es obligatorio adjuntar un comprobante de pago válido para registrar la cita."]);
+            exit;
+        }
+
+        // 7. Insertar Cita con estado 'Por Validar'
+        $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Por Validar', ?) RETURNING id_cita");
         $insertCita->execute([$id_cliente, $id_empleado, $fechaHora, $total]);
         $filaCita = $insertCita->fetch();
         $id_cita = $filaCita['id_cita'];
 
-        // 6. Insertar detalle de cita
+        // 8. Insertar detalle de cita
         $insertDetalle = $conexion->prepare("INSERT INTO detalle_citas (id_cita, id_servicio, precio_unitario) VALUES (?, ?, ?)");
         $insertDetalle->execute([$id_cita, $id_servicio, $total]);
 
-        // 7. Registrar el pago
-        $insertPago = $conexion->prepare("INSERT INTO pagos (id_cita, monto, metodo_pago) VALUES (?, ?, ?)");
-        $insertPago->execute([$id_cita, $montoPago, $metodoTexto]);
+        // 9. Registrar el pago guardando la cadena Base64 en Neon
+        $insertPago = $conexion->prepare("INSERT INTO pagos (id_cita, monto, metodo_pago, comprobante_url) VALUES (?, ?, ?, ?)");
+        $insertPago->execute([$id_cita, $montoPago, $metodoTexto, $comprobanteBase64]);
 
-        echo json_encode(["status" => "success", "message" => "¡Cita guardada correctamente! Te esperamos en Consientt Spa."]);
+        echo json_encode([
+            "status" => "success", 
+            "message" => "¡Cita registrada con éxito! Tu espacio está 'Por Validar'."
+        ]);
 
     } catch (Exception $e) {
         echo json_encode(["status" => "error", "message" => "Error en el servidor: " . $e->getMessage()]);
