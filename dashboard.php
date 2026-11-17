@@ -152,7 +152,6 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
         <section id="tab-citas" class="dashboard-tab active">
           <div class="action-bar">
             <h3>Registros de <code>citas</code></h3>
-            <button class="btn-action"><i class="fas fa-plus"></i> Nueva Cita</button>
           </div>
           <div class="table-wrapper">
             <table>
