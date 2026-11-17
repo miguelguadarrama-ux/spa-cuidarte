@@ -447,7 +447,16 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
   <script>
     const menuItems = document.querySelectorAll('.menu-item');
     const tabs = document.querySelectorAll('.dashboard-tab');
-    const tabTitle = document.getElementById('current-tab-title');
+    const tabTitle = document.getElementById('current-tab-title');    
+      
+    function abrirModalEmpleado() {
+        document.getElementById('modalEmpleado').style.display = 'flex';
+    }
+
+    function cerrarModalEmpleado() {
+        document.getElementById('modalEmpleado').style.display = 'none';
+    }
+      
       // Funciones para abrir y cerrar el modal de clientes
     function abrirModalCliente() {
         document.getElementById('modalCliente').style.display = 'flex';
