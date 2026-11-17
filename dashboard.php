@@ -146,7 +146,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
 
       <div class="content-body">
         
-        <!-- PESTAÑA: CITAS -->
+       <!-- PESTAÑA: CITAS -->
         <section id="tab-citas" class="dashboard-tab active">
           <div class="action-bar">
             <h3>Registros de <code>citas</code></h3>
@@ -162,11 +162,12 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                   <th>Fecha y Hora</th>
                   <th>Estado</th>
                   <th>Total</th>
+                  <th>Acciones</th> <!-- 📌 NUEVA COLUMNA -->
                 </tr>
               </thead>
               <tbody>
                 <?php if (empty($citas)): ?>
-                  <tr><td colspan="6" style="text-align: center;">No hay citas registradas.</td></tr>
+                  <tr><td colspan="7" style="text-align: center;">No hay citas registradas.</td></tr>
                 <?php else: ?>
                   <?php foreach ($citas as $cita): ?>
                     <tr>
@@ -176,6 +177,32 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                       <td><?php echo htmlspecialchars($cita['fecha_y_hora']); ?></td>
                       <td><span class="status-badge <?php echo htmlspecialchars($cita['clase_estado']); ?>"><?php echo htmlspecialchars($cita['estado_visual']); ?></span></td>
                       <td><strong>$<?php echo number_format($cita['total'], 2); ?></strong></td>
+                      
+                      <!-- 📌 BOTONES DE ACCIÓN POR CITA -->
+                      <td style="display: flex; gap: 6px; align-items: center;">
+                        
+                        <!-- Ver Comprobante Base64 -->
+                        <?php if (!empty($cita['comprobante_url'])): ?>
+                            <button type="button" onclick="verComprobante('<?php echo $cita['comprobante_url']; ?>')" class="btn-accion" title="Ver Comprobante de Pago" style="background: #C9A96E; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer;">
+                                <i class="fas fa-file-image"></i>
+                            </button>
+                        <?php else: ?>
+                            <span style="font-size: 0.75rem; color: #999;">Sin comprobante</span>
+                        <?php endif; ?>
+
+                        <!-- Aprobar si está Por Validar -->
+                        <?php if ($cita['estado'] === 'Por Validar'): ?>
+                            <a href="cambiar_estado.php?id=<?php echo $cita['id_cita']; ?>&estado=Confirmada" title="Aprobar Cita" style="background: #28a745; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                                <i class="fas fa-check"></i>
+                            </a>
+                        <?php endif; ?>
+
+                        <!-- Cancelar -->
+                        <a href="cambiar_estado.php?id=<?php echo $cita['id_cita']; ?>&estado=Cancelada" title="Cancelar Cita" onclick="return confirm('¿Seguro que deseas cancelar esta cita?');" style="background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                            <i class="fas fa-times"></i>
+                        </a>
+
+                      </td>
                     </tr>
                   <?php endforeach; ?>
                 <?php endif; ?>
@@ -310,7 +337,20 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
     const menuItems = document.querySelectorAll('.menu-item');
     const tabs = document.querySelectorAll('.dashboard-tab');
     const tabTitle = document.getElementById('current-tab-title');
-
+    // Función para abrir el comprobante guardado en Base64
+    function verComprobante(base64Data) {
+        let ventana = window.open();
+        ventana.document.write(`
+            <html>
+                <head>
+                    <title>Comprobante de Pago - Consientt Spa</title>
+                </head>
+                <body style="display:flex; justify-content:center; align-items:center; height:100vh; background:#1a1a1a; margin:0;">
+                    <img src="${base64Data}" style="max-width:95%; max-height:95%; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.7);">
+                </body>
+            </html>
+        `);
+    }
     menuItems.forEach(item => {
       item.addEventListener('click', () => {
         menuItems.forEach(i => i.classList.remove('active'));
