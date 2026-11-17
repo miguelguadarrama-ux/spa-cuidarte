@@ -96,6 +96,26 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
+    <!-- Modal Agregar Servicio -->
+<div id="modalServicio" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+    <div style="background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom: 20px; font-family: 'Plus Jakarta Sans', sans-serif; color: #271a2e;">Agregar Nuevo Servicio</h3>
+        <form action="agregar_servicio.php" method="POST">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Nombre del Servicio</label>
+                <input type="text" name="nombre" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem;">Precio Base ($)</label>
+                <input type="number" step="0.01" name="precio" required placeholder="Ej. 750.00" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" style="background: #3a1e3a; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 1;">Guardar Servicio</button>
+                <button type="button" onclick="cerrarModalServicio()" style="background: #e0e0e0; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
 <!-- Modal Registrar Empleado -->
 <div id="modalEmpleado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
     <div style="background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
