@@ -465,5 +465,48 @@ include 'conexion.php';
 
   <!-- JS -->
   <script src="script.js"></script>
+    document.getElementById('servicioSelect').addEventListener('change', actualizarHorarios);
+document.getElementById('fechaInput').addEventListener('change', actualizarHorarios);
+document.getElementById('empleadoSelect').addEventListener('change', actualizarHorarios);
+
+function actualizarHorarios() {
+    const servicio = document.getElementById('servicioSelect').value;
+    const fecha = document.getElementById('fechaInput').value;
+    const empleado = document.getElementById('empleadoSelect').value;
+
+    if (!servicio || !fecha || !empleado) return;
+
+    // Llamada AJAX al archivo PHP
+    fetch(`obtener_horarios.php?servicio=${servicio}&fecha=${fecha}&empleado=${empleado}`)
+        .then(response => response.json())
+        .then(horarios => {
+            const contenedor = document.getElementById('contenedorHorarios');
+            contenedor.innerHTML = ''; // Limpiar horarios anteriores
+
+            if (horarios.length === 0) {
+                contenedor.innerHTML = '<p style="color: #999;">No hay horarios disponibles para esta combinación.</p>';
+                return;
+            }
+
+            // Crear dinámicamente los botones de horarios
+            horarios.forEach(hora => {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.className = 'btn-horario';
+                boton.textContent = hora;
+                boton.style.cssText = "padding: 10px 15px; border: 1px solid #ccc; background: white; border-radius: 8px; cursor: pointer;";
+                
+                // Evento al seleccionar un horario
+                boton.click = function() {
+                    document.querySelectorAll('.btn-horario').forEach(b => b.style.background = 'white');
+                    boton.style.background = '#3a1e3a'; // Color seleccionado
+                    boton.style.color = 'white';
+                    document.getElementById('inputHoraSeleccionada').value = hora;
+                };
+
+                contenedor.appendChild(boton);
+            });
+        });
+}
 </body>
 </html> 
