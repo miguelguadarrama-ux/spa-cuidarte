@@ -227,7 +227,7 @@ include 'conexion.php';
         <!-- FORMULARIO VISIBLE SOLO SI TIENE SESIÓN INICIADA -->
         <div class="agendamiento-grid">
           <!-- Formulario -->
-          <form class="agendamiento-form" id="formCita" novalidate>
+          <form class="agendamiento-form" id="formCita" enctype="multipart/form-data" novalidate>
           <!-- Paso 1 -->
             <div class="form-step">
               <h3><span class="step-number">1</span> Elige fecha y horario</h3>
