@@ -39,10 +39,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id_cliente = $filaNuevo['idcliente'];
         }
 
-        // 2. Obtener el ID y precio del servicio
-        $stmtServicio = $conexion->prepare("SELECT id_servicio, precio FROM servicios WHERE nombre = ?");
+       // 2. Obtener el ID, precio Y LA DURACIÓN del servicio
+        $stmtServicio = $conexion->prepare("SELECT id_servicio, precio, duracion FROM servicios WHERE nombre = ?");
         $stmtServicio->execute([$servicio]);
-        $datosServicio = $stmtServicio->fetch();
+        $datosServicio = $stmtServicio$datosServicio = $stmtServicio->fetch();
 
         if (!$datosServicio) {
             echo json_encode(["status" => "error", "message" => "El servicio seleccionado no existe en la base de datos."]);
@@ -51,6 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $id_servicio = $datosServicio['id_servicio'];
         $total = $datosServicio['precio'];
+        $duracionMinutos = intval($datosServicio['duracion'] ?? 60); // Duración en minutos (por defecto 60 si viene vacía)
         
         if ($modalidadPago === 'completo') {
             $montoPago = $total; 
@@ -67,24 +68,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id_empleado = $empValido['id_empleado'] ?? 5; 
         }
 
-        // 4. Blindaje total de Fecha y Hora
+        // 4. Blindaje total de Fecha y Hora de Inicio
         $horaLimpia = (strlen($hora) >= 5) ? substr($hora, 0, 5) . ':00' : '12:00:00';
         
         if (empty($fechaTexto) || $fechaTexto === 'null' || $fechaTexto === 'undefined' || preg_match('/[a-zA-Z]/', $fechaTexto)) {
-            $fechaHora = date('Y-m-d') . ' ' . $horaLimpia;
+            $fechaHoraInicio = date('Y-m-d') . ' ' . $horaLimpia;
         } else {
-            $fechaHora = $fechaTexto . ' ' . $horaLimpia;
+            $fechaHoraInicio = $fechaTexto . ' ' . $horaLimpia;
         }
 
-        // 5. Validar si ese empleado específico ya tiene cita en ese horario
-        $stmtCheck = $conexion->prepare("SELECT id_cita FROM citas WHERE fecha_y_hora = ? AND id_empleado = ? AND estado != 'Cancelada' AND estado != 'Vencida'");
-        $stmtCheck->execute([$fechaHora, $id_empleado]);
+        // Calcular la hora y fecha de fin exacta sumando los minutos del servicio
+        $timestampInicio = strtotime($fechaHoraInicio);
+        $timestampFin = $timestampInicio + ($duracionMinutos * 60);
+        $fechaHoraFin = date('Y-m-d H:i:s', $timestampFin);
+
+        // 5. VALIDACIÓN INTELIGENTE DE CRUCE DE HORARIOS (RANGOS)
+        // Evita que un nuevo servicio se encime con una cita activa del mismo especialista
+        $sqlCruces = "SELECT c.id_cita 
+                      FROM citas c 
+                      JOIN detalle_citas dc ON c.id_cita = dc.id_cita
+                      JOIN servicios s ON dc.id_servicio = s.id_servicio
+                      WHERE c.id_empleado = ? 
+                      AND c.estado != 'Cancelada' 
+                      AND c.estado != 'Vencida'
+                      AND (
+                          (:inicio_nuevo < (c.fecha_y_hora + (s.duracion || ' minutes')::interval)) 
+                          AND 
+                          (:fin_nuevo > c.fecha_y_hora)
+                      )";
+                      
+        $stmtCheck = $conexion->prepare($sqlCruces);
+        // Pasamos los parámetros de inicio y fin de la nueva cita que se quiere agendar
+        $stmtCheck->execute([
+            'id_empleado' => $id_empleado,
+            'inicio_nuevo' => $fechaHoraInicio,
+            'fin_nuevo' => $fechaHoraFin
+        ]);
         
         if ($stmtCheck->rowCount() > 0) {
-            echo json_encode(["status" => "error", "message" => "Lo sentimos, el profesional seleccionado ya tiene una cita agendada en este horario. Elige otra hora."]);
+            echo json_encode(["status" => "error", "message" => "Lo sentimos, el profesional ya tiene otra cita ocupada en ese intervalo de tiempo. Elige un horario distinto."]);
             exit;
         }
-
         // 6. PROCESAR Y CONVERTIR EL COMPROBANTE A BASE64 (Data URI)
         $comprobanteBase64 = null;
         if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
