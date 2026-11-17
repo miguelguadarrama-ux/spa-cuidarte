@@ -17,20 +17,22 @@ $correo = $_SESSION['correo'] ?? '';
 // Definimos si tiene acceso total (tú o superadmin)
 $es_acceso_total = ($rol === 'superadmin' || $rol === 'admin' || $correo === 'miguel@consientt.com');
 
-// 1. OBTENER CITAS (Filtradas por rol)
+// 1. OBTENER CITAS UNIENDO LA TABLA PAGOS
 if ($es_acceso_total) {
-    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total,c.comprobante_url 
+    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total, p.comprobante_url 
                   FROM citas c
                   JOIN cliente cl ON c.id_cliente = cl.idcliente
                   JOIN empleados e ON c.id_empleado = e.id_empleado
+                  LEFT JOIN pagos p ON c.id_cita = p.id_cita
                   ORDER BY c.fecha_y_hora DESC";
     $stmt_citas = $conexion->prepare($sql_citas);
     $stmt_citas->execute();
 } else {
-    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total, c.comprobante_url
+    $sql_citas = "SELECT c.id_cita AS id_cita, cl.nombre AS cliente_nombre, e.nombre AS empleado_nombre, c.fecha_y_hora, c.estado, c.total, p.comprobante_url 
                   FROM citas c
                   JOIN cliente cl ON c.id_cliente = cl.idcliente
                   JOIN empleados e ON c.id_empleado = e.id_empleado
+                  LEFT JOIN pagos p ON c.id_cita = p.id_cita
                   WHERE c.id_empleado = ?
                   ORDER BY c.fecha_y_hora DESC";
     $stmt_citas = $conexion->prepare($sql_citas);
