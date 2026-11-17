@@ -31,12 +31,16 @@ include 'conexion.php';
         <a href="#experiencia">Sobre Nosotros</a>
         <a href="#contacto">Contacto</a>
         
-        <?php if (isset($_SESSION['nombre'])): ?>
-          <!-- Se muestra cuando la sesión está activa -->
-          <span style="color: var(--primary-color, #b8860b); font-weight: 600; margin-right: 10px;">
-            <i class="fas fa-user-circle"></i> ¡Hola, <?php echo htmlspecialchars($_SESSION['nombre']); ?>!
-          </span>
-          <a href="logout.php" style="color: #d9534f; font-weight: 600;"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+     <?php if (isset($_SESSION['nombre'])): ?>
+          <!-- Contenedor estilizado para el usuario y cerrar sesión -->
+          <div class="user-session-container">
+            <span class="user-greeting">
+              <i class="fas fa-user-circle"></i> ¡Hola, <?php echo htmlspecialchars($_SESSION['nombre']); ?>!
+            </span>
+            <a href="logout.php" class="btn-cerrar-sesion">
+              <i class="fas fa-sign-out-alt"></i> Salir
+            </a>
+          </div>
         <?php else: ?>
           <!-- Se muestra cuando NO se ha iniciado sesión -->
           <a href="login.php" style="color: var(--primary-color, #b8860b); font-weight: 600;"><i class="fas fa-user-lock"></i> Ingresar</a>
