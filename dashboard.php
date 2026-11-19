@@ -454,7 +454,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </section>
 
-       <!-- PESTAÑA: PAGOS -->
+      <!-- PESTAÑA: PAGOS -->
         <section id="tab-pagos" class="dashboard-tab">
           <div class="action-bar">
             <h3>Registros de <code>pagos</code></h3>
@@ -513,7 +513,17 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                         <?php if ($faltaPorPagar <= 0): ?>
                           <span style="color: #15803d; font-weight: 600;">$0.00 (Liquidado)</span>
                         <?php else: ?>
-                          <span style="color: #b45309; font-weight: 700;">$<?= number_format($faltaPorPagar, 2) ?></span>
+                          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="color: #b45309; font-weight: 700;">$<?= number_format($faltaPorPagar, 2) ?></span>
+                            <button
+                              type="button"
+                              class="btn-liquidar"
+                              data-id="<?= $idPagoStr ?>"
+                              data-restante="<?= htmlspecialchars((string)$faltaPorPagar, ENT_QUOTES, 'UTF-8') ?>"
+                              style="background: #3a1e3a; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.82rem;">
+                              Marcar liquidado
+                            </button>
+                          </div>
                         <?php endif; ?>
                       </td>
                     </tr>
@@ -531,16 +541,16 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
   <script>
     const menuItems = document.querySelectorAll('.menu-item');
     const tabs = document.querySelectorAll('.dashboard-tab');
-    const tabTitle = document.getElementById('current-tab-title');    
-   
+    const tabTitle = document.getElementById('current-tab-title');
+
     function abrirModalServicio() {
         document.getElementById('modalServicio').style.display = 'flex';
     }
 
     function cerrarModalServicio() {
         document.getElementById('modalServicio').style.display = 'none';
-    } 
-      
+    }
+
     function abrirModalEmpleado() {
         document.getElementById('modalEmpleado').style.display = 'flex';
     }
@@ -548,8 +558,8 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
     function cerrarModalEmpleado() {
         document.getElementById('modalEmpleado').style.display = 'none';
     }
-      
-      // Funciones para abrir y cerrar el modal de clientes
+
+    // Funciones para abrir y cerrar el modal de clientes
     function abrirModalCliente() {
         document.getElementById('modalCliente').style.display = 'flex';
     }
@@ -557,7 +567,8 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
     function cerrarModalCliente() {
         document.getElementById('modalCliente').style.display = 'none';
     }
-// Función para abrir el comprobante guardado en Base64
+
+    // Función para abrir el comprobante guardado en Base64
     function verComprobante(base64Data) {
         let ventana = window.open();
         ventana.document.write(`
@@ -571,6 +582,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
             </html>
         `);
     }
+
     menuItems.forEach(item => {
       item.addEventListener('click', () => {
         menuItems.forEach(i => i.classList.remove('active'));
@@ -579,8 +591,42 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
         item.classList.add('active');
         const targetTab = item.getAttribute('data-target');
         document.getElementById(targetTab).classList.add('active');
-        
+
         tabTitle.textContent = "Control de " + item.textContent.trim();
+      });
+    });
+
+    // Marcar pago pendiente como liquidado en la base de datos
+    document.querySelectorAll('.btn-liquidar').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const idPago = btn.dataset.id;
+        const restante = parseFloat(btn.dataset.restante) || 0;
+
+        if (!idPago) return;
+
+        const confirmar = confirm(`¿Confirmar que se liquidaron $${restante.toFixed(2)} del pago #${idPago}?`);
+        if (!confirmar) return;
+
+        const formData = new FormData();
+        formData.append('id_pago', idPago);
+        formData.append('restante', restante);
+
+        try {
+          const res = await fetch('marcar_liquidado.php', {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+
+          if (data.ok) {
+            location.reload();
+          } else {
+            alert(data.error || 'No se pudo actualizar el pago.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error de conexión al marcar como liquidado.');
+        }
       });
     });
   </script>
