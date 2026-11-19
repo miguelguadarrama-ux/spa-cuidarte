@@ -141,7 +141,7 @@ include 'conexion.php';
     </div>
   </section>
 
-  <div class="servicios-lista" id="serviciosLista">
+ <div class="servicios-lista" id="serviciosLista">
         <?php
         require_once 'conexion.php';
 
@@ -164,18 +164,18 @@ include 'conexion.php';
             $descripcion = htmlspecialchars($srv['descripcion'] ?? '', ENT_QUOTES, 'UTF-8');
 
             // Normalizar categoría para filtros: clinico, spa, estetica
-            $catRaw = strtolower(trim($srv['categoria'] ?? 'clinico'));
-            $catRaw = str_replace(['í', 'é'], ['i', 'e'], $catRaw);
+            $catRaw = strtolower(trim($srv['categoria'] ?? ''));
+            $catRaw = str_replace(['í', 'é', 'á', 'ó', 'ú'], ['i', 'e', 'a', 'o', 'u'], $catRaw);
             $categoria = in_array($catRaw, ['clinico', 'spa', 'estetica']) ? $catRaw : 'clinico';
 
-            // Elegir ícono de Font Awesome según categoría o nombre del servicio
+            // Asignar ícono garantizado para cualquier servicio o categoría
             $nombreLower = strtolower($srv['nombre'] ?? '');
             if (strpos($nombreLower, 'manicure') !== false || strpos($nombreLower, 'gelish') !== false || strpos($nombreLower, 'mano') !== false || $categoria === 'estetica') {
               $iconoClase = 'fas fa-gem';
             } elseif ($categoria === 'spa' || strpos($nombreLower, 'spa') !== false || strpos($nombreLower, 'masaje') !== false) {
               $iconoClase = 'fas fa-spa';
             } else {
-              $iconoClase = 'fas fa-footprint';
+              $iconoClase = 'fas fa-spa';
             }
 
             // Precio y duración
@@ -185,7 +185,6 @@ include 'conexion.php';
             $duracionRaw = trim((string)($srv['duracion'] ?? '60'));
             $duracionTexto = (stripos($duracionRaw, 'min') !== false) ? $duracionRaw : ($duracionRaw . ' min');
 
-            // Badge opcional si existe columna etiqueta o badge
             $badge = htmlspecialchars($srv['etiqueta'] ?? ($srv['badge'] ?? ''), ENT_QUOTES, 'UTF-8');
         ?>
           <div class="servicio-item"
