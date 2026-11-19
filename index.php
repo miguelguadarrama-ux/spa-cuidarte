@@ -273,14 +273,14 @@ include 'conexion.php';
                 <select id="servicioSelect" name="id_servicio" required>
                   <option value="" disabled selected>Selecciona un servicio</option>
                   <?php
-                    include 'conexion.php'; 
-                    $stmt_srv = $conexion->query("SELECT * FROM servicios ORDER BY nombre ASC");
-                    while ($srv = $stmt_srv$srv = $stmt_srv->fetch(PDO::FETCH_ASSOC)) {
-                    echo '<option value="' . $srv['id_servicio'] . '" data-precio="' . $srv['precio'] . '" data-duracion="' . $srv['duracion'] . ' min">' 
-                    . htmlspecialchars($srv['nombre']) . ' — $' . number_format($srv['precio'], 2) . ' (' . $srv['duracion'] . ' mins)' 
-                    . '</option>';
-                    }
-                    ?>
+                  include 'conexion.php';
+                  $stmt_srv = $conexion->query("SELECT * FROM servicios ORDER BY nombre ASC");
+                  while ($srv = $stmt_srv->fetch(PDO::FETCH_ASSOC)) {
+                  echo '<option value="' . $srv['id_servicio'] . '" data-precio="' . $srv['precio'] . '" data-duracion="' . $srv['duracion'] . ' min">'
+                  . htmlspecialchars($srv['nombre']) . ' — $' . number_format($srv['precio'], 2) . ' (' . $srv['duracion'] . ' mins)'
+                  . '</option>';
+                  }
+                  ?>
                 </select>
               </div>
 
