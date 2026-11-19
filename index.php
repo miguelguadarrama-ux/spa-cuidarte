@@ -141,85 +141,77 @@ include 'conexion.php';
     </div>
   </section>
 
-  <!-- Servicios y Precios -->
-  <section class="servicios" id="precios">
-    <div class="container">
-      <div class="servicios-header">
-        <div>
-          <h2>Servicios, precios y duración</h2>
-          <p style="color: var(--text-muted); margin-top: 8px;">Precios transparentes. Sin sorpresas.</p>
-        </div>
-        <div class="servicios-tabs" id="serviciosTabs">
-          <button class="active" data-filtro="todos">Todos</button>
-          <button data-filtro="clinico">Clínico</button>
-          <button data-filtro="spa">Spa</button>
-          <button data-filtro="estetica">Estética</button>
-        </div>
+  <div class="servicios-lista" id="serviciosLista">
+        <?php
+        require_once 'conexion.php';
+
+        try {
+          $stmtSrv = $conexion->query("SELECT * FROM servicios ORDER BY id_servicio DESC");
+          $serviciosBD = $stmtSrv->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+          $serviciosBD = [];
+        }
+
+        if (empty($serviciosBD)):
+        ?>
+          <p style="color: var(--text-muted); text-align: center; padding: 20px;">
+            No hay servicios registrados todavía. Agrega uno desde tu panel de administrador.
+          </p>
+        <?php
+        else:
+          foreach ($serviciosBD as $srv):
+            $nombre = htmlspecialchars($srv['nombre'] ?? 'Servicio', ENT_QUOTES, 'UTF-8');
+            $descripcion = htmlspecialchars($srv['descripcion'] ?? '', ENT_QUOTES, 'UTF-8');
+
+            // Normalizar categoría para que coincida con los filtros: clinico, spa, estetica
+            $catRaw = strtolower(trim($srv['categoria'] ?? 'clinico'));
+            $catRaw = str_replace(['í'], ['i'], $catRaw);
+            $categoria = in_array($catRaw, ['clinico', 'spa', 'estetica']) ? $catRaw : 'clinico';
+
+            // Ícono según categoría
+            $icono = 'fa-spa';
+            if ($categoria === 'clinico') $icono = 'fa-footprint';
+            elseif ($categoria === 'estetica') $icono = 'fa-gem';
+
+            // Precio y duración
+            $precioNum = is_numeric($srv['precio'] ?? null) ? (float)$srv['precio'] : 0;
+            $precioFormateado = '$' . number_format($precioNum, ($precioNum == (int)$precioNum) ? 0 : 2, '.', ',');
+
+            $duracionRaw = trim((string)($srv['duracion'] ?? '60'));
+            $duracionTexto = (stripos($duracionRaw, 'min') !== false) ? $duracionRaw : ($duracionRaw . ' min');
+
+            // Badge opcional si existe columna etiqueta o badge
+            $badge = htmlspecialchars($srv['etiqueta'] ?? ($srv['badge'] ?? ''), ENT_QUOTES, 'UTF-8');
+        ?>
+          <div class="servicio-item"
+               data-categoria="<?= htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8') ?>"
+               data-nombre="<?= $nombre ?>"
+               data-precio="<?= htmlspecialchars((string)$precioNum, ENT_QUOTES, 'UTF-8') ?>"
+               data-duracion="<?= htmlspecialchars($duracionTexto, ENT_QUOTES, 'UTF-8') ?>">
+            <div class="servicio-info">
+              <div class="servicio-icon"><i class="fas <?= $icono ?>"></i></div>
+              <div class="servicio-detalle">
+                <h3>
+                  <?= $nombre ?>
+                  <?php if (!empty($badge)): ?>
+                    <span class="servicio-badge"><?= $badge ?></span>
+                  <?php endif; ?>
+                </h3>
+                <?php if (!empty($descripcion)): ?>
+                  <p><?= $descripcion ?></p>
+                <?php endif; ?>
+              </div>
+            </div>
+            <div class="servicio-precio">
+              <span class="precio"><?= $precioFormateado ?></span>
+              <span class="duracion"><?= htmlspecialchars($duracionTexto, ENT_QUOTES, 'UTF-8') ?></span>
+            </div>
+          </div>
+        <?php
+          endforeach;
+        endif;
+        ?>
       </div>
-
-      <div class="servicios-lista" id="serviciosLista">
-        <!-- Servicio 1 -->
-        <div class="servicio-item" data-categoria="clinico" data-nombre="Pedicure Clínico Completo" data-precio="650" data-duracion="60 min">
-          <div class="servicio-info">
-            <div class="servicio-icon"><i class="fas fa-footprint"></i></div>
-            <div class="servicio-detalle">
-              <h3>Pedicure Clínico Completo <span class="servicio-badge">Recomendado</span></h3>
-              <p>Tratamiento integral para uñas encarnadas, callosidades y hongos. Instrumental estéril.</p>
-            </div>
-          </div>
-          <div class="servicio-precio">
-            <span class="precio">$650</span>
-            <span class="duracion">60 min</span>
-          </div>
-        </div>
-
-        <!-- Servicio 2 -->
-        <div class="servicio-item" data-categoria="spa" data-nombre="Spa de Hidratación Profunda" data-precio="780" data-duracion="75 min">
-          <div class="servicio-info">
-            <div class="servicio-icon"><i class="fas fa-spa"></i></div>
-            <div class="servicio-detalle">
-              <h3>Spa de Hidratación Profunda <span class="servicio-badge">Popular</span></h3>
-              <p>Baño de sales, exfoliación con azúcar, mascarilla de barro, masaje con piedras calientes.</p>
-            </div>
-          </div>
-          <div class="servicio-precio">
-            <span class="precio">$780</span>
-            <span class="duracion">75 min</span>
-          </div>
-        </div>
-
-        <!-- Servicio 3 -->
-        <div class="servicio-item" data-categoria="estetica" data-nombre="Baile de Manos - Manicure Ruso" data-precio="480" data-duracion="50 min">
-          <div class="servicio-info">
-            <div class="servicio-icon"><i class="fas fa-gem"></i></div>
-            <div class="servicio-detalle">
-              <h3>Baile de Manos - Manicure Ruso</h3>
-              <p>Limpieza profunda de cutículas, limado y esmaltado semipermanente de alta duración.</p>
-            </div>
-          </div>
-          <div class="servicio-precio">
-            <span class="precio">$480</span>
-            <span class="duracion">50 min</span>
-          </div>
-        </div>
-
-        <!-- Servicio 4 -->
-        <div class="servicio-item" data-categoria="estetica" data-nombre="Pedicure Spa + Gelish" data-precio="950" data-duracion="90 min">
-          <div class="servicio-info">
-            <div class="servicio-icon"><i class="fas fa-paint-brush"></i></div>
-            <div class="servicio-detalle">
-              <h3>Pedicure Spa + Gelish <span class="servicio-badge">Nuevo</span></h3>
-              <p>Ritual completo de spa + esmaltado semipermanente de larga duración. Incluye diseño.</p>
-            </div>
-          </div>
-          <div class="servicio-precio">
-            <span class="precio">$950</span>
-            <span class="duracion">90 min</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- Agendamiento -->
   <section class="agendamiento" id="citas">
