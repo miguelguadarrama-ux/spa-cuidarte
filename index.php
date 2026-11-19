@@ -163,15 +163,20 @@ include 'conexion.php';
             $nombre = htmlspecialchars($srv['nombre'] ?? 'Servicio', ENT_QUOTES, 'UTF-8');
             $descripcion = htmlspecialchars($srv['descripcion'] ?? '', ENT_QUOTES, 'UTF-8');
 
-            // Normalizar categoría para que coincida con los filtros: clinico, spa, estetica
+            // Normalizar categoría para filtros: clinico, spa, estetica
             $catRaw = strtolower(trim($srv['categoria'] ?? 'clinico'));
-            $catRaw = str_replace(['í'], ['i'], $catRaw);
+            $catRaw = str_replace(['í', 'é'], ['i', 'e'], $catRaw);
             $categoria = in_array($catRaw, ['clinico', 'spa', 'estetica']) ? $catRaw : 'clinico';
 
-            // Ícono según categoría
-            $icono = 'fa-spa';
-            if ($categoria === 'clinico') $icono = 'fa-footprint';
-            elseif ($categoria === 'estetica') $icono = 'fa-gem';
+            // Elegir ícono de Font Awesome según categoría o nombre del servicio
+            $nombreLower = strtolower($srv['nombre'] ?? '');
+            if (strpos($nombreLower, 'manicure') !== false || strpos($nombreLower, 'gelish') !== false || strpos($nombreLower, 'mano') !== false || $categoria === 'estetica') {
+              $iconoClase = 'fas fa-gem';
+            } elseif ($categoria === 'spa' || strpos($nombreLower, 'spa') !== false || strpos($nombreLower, 'masaje') !== false) {
+              $iconoClase = 'fas fa-spa';
+            } else {
+              $iconoClase = 'fas fa-footprint';
+            }
 
             // Precio y duración
             $precioNum = is_numeric($srv['precio'] ?? null) ? (float)$srv['precio'] : 0;
@@ -189,7 +194,7 @@ include 'conexion.php';
                data-precio="<?= htmlspecialchars((string)$precioNum, ENT_QUOTES, 'UTF-8') ?>"
                data-duracion="<?= htmlspecialchars($duracionTexto, ENT_QUOTES, 'UTF-8') ?>">
             <div class="servicio-info">
-              <div class="servicio-icon"><i class="fas <?= $icono ?>"></i></div>
+              <div class="servicio-icon"><i class="<?= $iconoClase ?>"></i></div>
               <div class="servicio-detalle">
                 <h3>
                   <?= $nombre ?>
