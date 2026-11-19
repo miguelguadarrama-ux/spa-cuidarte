@@ -1,11 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
 
   /* ==========================================
-     1. SELECTOR DE FECHA LIBRE
+     1. SELECTOR DE FECHA Y EMPLEADO
      ========================================== */
-  const empleadoSelect = document.getElementById('id_empleado');
+  const empleadoSelect = document.getElementById('id_empleado') || document.getElementById('empleadoSelect');
   const inputFechaCita = document.getElementById('inputFechaCita');
+  const servicioSelect = document.getElementById('servicioSelect');
+  const horasGrid = document.getElementById('horasGrid');
+
   let fechaSeleccionada = null;
+  let horaSeleccionada = null;
 
   if (inputFechaCita) {
     const hoyStr = new Date().toISOString().split('T')[0];
@@ -17,39 +21,85 @@ document.addEventListener('DOMContentLoaded', function () {
 
     inputFechaCita.addEventListener('change', (e) => {
       fechaSeleccionada = e.target.value;
+      horaSeleccionada = null;
+      cargarHorariosDisponibles();
       actualizarResumen();
     });
   }
 
   /* ==========================================
-     2. GENERAR HORAS DISPONIBLES
+     2. CARGAR HORAS DINÁMICAS DESDE PHP
      ========================================== */
-  const horasGrid = document.getElementById('horasGrid');
-  const horasDisponibles = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30'];
-  let horaSeleccionada = null;
-
-  function generarHoras() {
+  function limpiarHorarios(mensaje = 'Selecciona servicio, especialista y fecha para ver los horarios.') {
     if (!horasGrid) return;
-    horasGrid.innerHTML = '';
-    horasDisponibles.forEach((hora, index) => {
-      const div = document.createElement('div');
-      div.classList.add('hora-item');
-      if (index === 2) div.classList.add('active');
-      div.textContent = hora;
-      div.dataset.hora = hora;
-      div.addEventListener('click', () => seleccionarHora(div));
-      horasGrid.appendChild(div);
-    });
-    const activa = horasGrid.querySelector('.hora-item.active');
-    if (activa) horaSeleccionada = activa.dataset.hora;
+    horaSeleccionada = null;
+    horasGrid.innerHTML = `<p style="color: #777; grid-column: 1 / -1; text-align: center; font-size: 0.9rem;">${mensaje}</p>`;
+    actualizarResumen();
   }
 
-  function seleccionarHora(el) {
+  function seleccionarHora(el, hora) {
     if (!horasGrid) return;
     horasGrid.querySelectorAll('.hora-item').forEach(h => h.classList.remove('active'));
     el.classList.add('active');
-    horaSeleccionada = el.dataset.hora;
+    horaSeleccionada = hora;
     actualizarResumen();
+  }
+
+  function cargarHorariosDisponibles() {
+    if (!horasGrid) return;
+
+    const servicioVal = servicioSelect ? servicioSelect.value : '';
+    const fechaVal = fechaSeleccionada || (inputFechaCita ? inputFechaCita.value : '');
+    const empleadoVal = empleadoSelect ? empleadoSelect.value : '';
+
+    if (!servicioVal || !fechaVal || !empleadoVal) {
+      limpiarHorarios();
+      return;
+    }
+
+    horasGrid.innerHTML = `<p style="color: #777; grid-column: 1 / -1; text-align: center; font-size: 0.9rem;">Buscando horarios disponibles...</p>`;
+
+    const params = new URLSearchParams({
+      servicio: servicioVal,
+      fecha: fechaVal,
+      empleado: empleadoVal
+    });
+
+    fetch(`obtener_horarios.php?${params.toString()}`)
+      .then(response => response.json())
+      .then(data => {
+        // Soporta tanto un array directo ['09:00', ...] como un objeto { horarios: [...] }
+        const horarios = Array.isArray(data) ? data : (data.horarios || []);
+        horasGrid.innerHTML = '';
+        horaSeleccionada = null;
+
+        if (!horarios.length) {
+          horasGrid.innerHTML = `<p style="color: #999; grid-column: 1 / -1; text-align: center; font-size: 0.9rem;">No hay horarios disponibles para esta combinación.</p>`;
+          actualizarResumen();
+          return;
+        }
+
+        horarios.forEach((hora, index) => {
+          const div = document.createElement('div');
+          div.classList.add('hora-item');
+          div.textContent = hora;
+          div.dataset.hora = hora;
+
+          if (index === 0) {
+            div.classList.add('active');
+            horaSeleccionada = hora;
+          }
+
+          div.addEventListener('click', () => seleccionarHora(div, hora));
+          horasGrid.appendChild(div);
+        });
+
+        actualizarResumen();
+      })
+      .catch(error => {
+        console.error('Error al obtener horarios:', error);
+        limpiarHorarios('No se pudieron cargar los horarios. Intenta de nuevo.');
+      });
   }
 
   /* ==========================================
@@ -62,7 +112,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const resumenTotal = document.getElementById('resumenTotal');
   const resumenAnticipo = document.getElementById('resumenAnticipo');
   const textoLabelPago = document.getElementById('textoLabelPago');
-  const servicioSelect = document.getElementById('servicioSelect');
   const modalidadPagoSelect = document.getElementById('modalidadPago');
   const textoInstruccionPago = document.getElementById('textoInstruccionPago');
 
@@ -73,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const opcion = servicioSelect.options[servicioSelect.selectedIndex];
     if (opcion && opcion.value) {
-      servicioActual.nombre = opcion.value;
+      servicioActual.nombre = opcion.dataset.nombre || opcion.value;
       servicioActual.precio = parseInt(opcion.dataset.precio, 10) || 0;
       servicioActual.duracion = opcion.dataset.duracion || '—';
     } else {
@@ -137,6 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
             break;
           }
         }
+        cargarHorariosDisponibles();
         actualizarResumen();
       }
     });
@@ -201,9 +251,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (email && (!email.value.trim() || !emailRegex.test(email.value.trim()))) { email.classList.add('error'); valido = false; }
       if (servicioSelect && !servicioSelect.value) { servicioSelect.classList.add('error'); valido = false; }
+      if (!horaSeleccionada) { valido = false; }
 
       if (!valido) {
-        alert('⚠️ Te faltan campos por rellenar o hay información inválida. Por favor, revisa los campos marcados en rojo.');
+        alert('⚠️ Revisa los campos obligatorios o selecciona un horario disponible.');
         return;
       }
 
@@ -218,10 +269,10 @@ document.addEventListener('DOMContentLoaded', function () {
       datosFormulario.append('hora', horaSeleccionada);
       datosFormulario.append('modalidad_pago', modalidadPagoSelect ? modalidadPagoSelect.value : 'anticipo');
       datosFormulario.append('id_empleado', empleadoSelect ? empleadoSelect.value : '');
-      // 📌 NUEVO: Adjuntar el archivo del comprobante al FormData
+
       const inputComprobante = document.getElementById('comprobante');
       if (inputComprobante && inputComprobante.files[0]) {
-          datosFormulario.append('comprobante', inputComprobante.files[0]);
+        datosFormulario.append('comprobante', inputComprobante.files[0]);
       }
 
       fetch('guardar_cita.php', {
@@ -254,14 +305,19 @@ document.addEventListener('DOMContentLoaded', function () {
               form.reset();
               if (mensajeConfirmacion) mensajeConfirmacion.classList.remove('show');
               if (servicioSelect) servicioSelect.selectedIndex = 0;
+              if (inputFechaCita) {
+                const hoyStr = new Date().toISOString().split('T')[0];
+                inputFechaCita.value = hoyStr;
+                fechaSeleccionada = hoyStr;
+              }
               servicioActual = { nombre: '', precio: 0, duracion: '' };
-              generarHoras();
+              cargarHorariosDisponibles();
               actualizarResumen();
             }, 15000);
           } else {
             alert('Error: ' + data.message);
           }
-        } catch(e) {
+        } catch (e) {
           console.error("El servidor devolvió HTML en lugar de JSON:", texto);
           alert('Hubo un error en el archivo PHP. Revisa la consola con F12.');
         }
@@ -274,12 +330,21 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ==========================================
-     7. INICIALIZAR
+     7. INICIALIZAR Y EVENTOS
      ========================================== */
-  generarHoras();
+  if (servicioSelect) {
+    servicioSelect.addEventListener('change', () => {
+      cargarHorariosDisponibles();
+      actualizarResumen();
+    });
+  }
+  if (empleadoSelect) {
+    empleadoSelect.addEventListener('change', cargarHorariosDisponibles);
+  }
+  if (modalidadPagoSelect) {
+    modalidadPagoSelect.addEventListener('change', actualizarResumen);
+  }
+
+  cargarHorariosDisponibles();
   actualizarResumen();
-
-  if (servicioSelect) servicioSelect.addEventListener('change', actualizarResumen);
-  if (modalidadPagoSelect) modalidadPagoSelect.addEventListener('change', actualizarResumen);
-
 });
