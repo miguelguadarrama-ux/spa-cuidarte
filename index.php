@@ -273,16 +273,14 @@ include 'conexion.php';
                 <select id="servicioSelect" name="id_servicio" required>
                   <option value="" disabled selected>Selecciona un servicio</option>
                   <?php
-                  // Asegúrate de incluir la conexión si no está arriba de tu archivo
-                  include 'conexion.php'; 
-                  $stmt_srv = $conexion->query("SELECT * FROM servicios ORDER BY nombre ASC");
-                  while ($srv = $stmt_srv->fetch(PDO::FETCH_ASSOC)) {
-                      // Guardamos el precio y duración en data-atributos por si tu JavaScript los usa para calcular totales o tiempos
-                      echo '<option value="' . $srv['id_servicio'] . '" data-precio="' . $srv['precio'] . '" data-duracion="' . $srv['duracion'] . ' min">' 
-                           . htmlspecialchars($srv['nombre']) . ' — $' . number_format($srv['precio'], 2) . ' (' . $srv['duracion'] . ' mins)' 
-                           . '</option>';
-                  }
-                  ?>
+                    include 'conexion.php'; 
+                    $stmt_srv = $conexion->query("SELECT * FROM servicios ORDER BY nombre ASC");
+                    while ($srv = $stmt_srv$srv = $stmt_srv->fetch(PDO::FETCH_ASSOC)) {
+                    echo '<option value="' . $srv['id_servicio'] . '" data-precio="' . $srv['precio'] . '" data-duracion="' . $srv['duracion'] . ' min">' 
+                    . htmlspecialchars($srv['nombre']) . ' — $' . number_format($srv['precio'], 2) . ' (' . $srv['duracion'] . ' mins)' 
+                    . '</option>';
+                    }
+                    ?>
                 </select>
               </div>
 
@@ -465,48 +463,73 @@ include 'conexion.php';
 
   <!-- JS -->
   <script src="script.js"></script>
-    document.getElementById('servicioSelect').addEventListener('change', actualizarHorarios);
-document.getElementById('fechaInput').addEventListener('change', actualizarHorarios);
-document.getElementById('empleadoSelect').addEventListener('change', actualizarHorarios);
+  <!-- JS -->
+  <script src="script.js"></script>
+  <script>
+    // Escuchar cuando cambien los selectores o la fecha (usando tus IDs exactos)
+    document.getElementById('servicioSelect')?.addEventListener('change', actualizarHorarios);
+    document.getElementById('inputFechaCita')?.addEventListener('change', actualizarHorarios);
+    document.getElementById('empleadoSelect')?.addEventListener('change', actualizarHorarios);
 
-function actualizarHorarios() {
-    const servicio = document.getElementById('servicioSelect').value;
-    const fecha = document.getElementById('fechaInput').value;
-    const empleado = document.getElementById('empleadoSelect').value;
+    function actualizarHorarios() {
+        const servicioEl = document.getElementById('servicioSelect');
+        const fechaEl = document.getElementById('inputFechaCita');
+        const empleadoEl = document.getElementById('empleadoSelect');
 
-    if (!servicio || !fecha || !empleado) return;
+        if (!servicioEl || !fechaEl || !empleadoEl) return;
 
-    // Llamada AJAX al archivo PHP
-    fetch(`obtener_horarios.php?servicio=${servicio}&fecha=${fecha}&empleado=${empleado}`)
-        .then(response => response.json())
-        .then(horarios => {
-            const contenedor = document.getElementById('contenedorHorarios');
-            contenedor.innerHTML = ''; // Limpiar horarios anteriores
+        const servicio = servicioEl.value;
+        const fecha = fechaEl.value;
+        const empleado = empleadoEl.value;
 
-            if (horarios.length === 0) {
-                contenedor.innerHTML = '<p style="color: #999;">No hay horarios disponibles para esta combinación.</p>';
-                return;
-            }
+        if (!servicio || !fecha || !empleado) return;
 
-            // Crear dinámicamente los botones de horarios
-            horarios.forEach(hora => {
-                const boton = document.createElement('button');
-                boton.type = 'button';
-                boton.className = 'btn-horario';
-                boton.textContent = hora;
-                boton.style.cssText = "padding: 10px 15px; border: 1px solid #ccc; background: white; border-radius: 8px; cursor: pointer;";
-                
-                // Evento al seleccionar un horario
-                boton.click = function() {
-                    document.querySelectorAll('.btn-horario').forEach(b => b.style.background = 'white');
-                    boton.style.background = '#3a1e3a'; // Color seleccionado
-                    boton.style.color = 'white';
-                    document.getElementById('inputHoraSeleccionada').value = hora;
-                };
+        // Llamada AJAX al archivo PHP para calcular los horarios según la duración del servicio
+        fetch(`obtener_horarios.php?servicio=${servicio}&fecha=${fecha}&empleado=${empleado}`)
+            .then(response => response.json())
+            .then(horarios => {
+                const contenedor = document.getElementById('horasGrid');
+                if (!contenedor) return;
+                contenedor.innerHTML = ''; // Limpiar horas anteriores
 
-                contenedor.appendChild(boton);
-            });
-        });
-}
+                if (horarios.length === 0) {
+                    contenedor.innerHTML = '<p style="color: #999; grid-column: 1 / -1; text-align: center;">No hay horarios disponibles para esta combinación.</p>';
+                    return;
+                }
+
+                // Crear dinámicamente los botones de horarios dentro de tu grid
+                horarios.forEach(hora => {
+                    const boton = document.createElement('button');
+                    boton.type = 'button';
+                    boton.className = 'btn-horario';
+                    boton.textContent = hora;
+
+                    // Evento al hacer clic en un horario disponible
+                    boton.addEventListener('click', function() {
+                        document.querySelectorAll('.btn-horario').forEach(b => {
+                            b.style.background = 'white';
+                            b.style.color = '#333';
+                        });
+                        boton.style.background = '#3a1e3a';
+                        boton.style.color = 'white';
+
+                        // Guardar la hora seleccionada en un input oculto para que se envíe al guardar la cita
+                        let inputOculto = document.getElementById('inputHoraSeleccionada');
+                        if (!inputOculto) {
+                            inputOculto = document.createElement('input');
+                            inputOculto.type = 'hidden';
+                            inputOculto.id = 'inputHoraSeleccionada';
+                            inputOculto.name = 'hora';
+                            document.getElementById('formCita')?.appendChild(inputOculto) || document.querySelector('form')?.appendChild(inputOculto);
+                        }
+                        inputOculto.value = hora;
+                    });
+
+                    contenedor.appendChild(boton);
+                });
+            })
+            .catch(error => console.error('Error al cargar horarios:', error));
+    }
+  </script>
 </body>
 </html> 
