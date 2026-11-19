@@ -471,14 +471,33 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($pagos as $pag): ?>
+                <?php if (empty($pagos) || !is_array($pagos)): ?>
                   <tr>
-                    <td><strong>#<?php echo $pag['id']; ?></strong></td>
-                    <td>Cita #<?php echo $pag['cita_id']; ?></td>
-                    <td><strong>$<?php echo number_format($pag['monto'], 2); ?></strong></td>
-                    <td><?php echo htmlspecialchars($pag['metodo']); ?></td>
+                    <td colspan="4" style="text-align: center; color: #777; padding: 20px;">
+                      No hay registros de pagos disponibles.
+                    </td>
                   </tr>
-                <?php endforeach; ?>
+                <?php else: ?>
+                  <?php foreach ($pagos as $pag):
+                    // Soporta distintos nombres de columna en PostgreSQL/PHP
+                    $idPago   = $pag['id_pago'] ?? ($pag['id'] ?? ($pag['pago_id'] ?? ''));
+                    $idCita   = $pag['id_cita'] ?? ($pag['cita_id'] ?? '');
+                    $montoRaw = $pag['monto'] ?? ($pag['total'] ?? ($pag['anticipo'] ?? 0));
+                    $metodo   = $pag['metodo'] ?? ($pag['modalidad_pago'] ?? ($pag['metodo_pago'] ?? 'Transferencia'));
+
+                    $montoNum = is_numeric($montoRaw) ? (float)$montoRaw : 0.0;
+                    $idPagoStr = htmlspecialchars((string)($idPago ?? ''), ENT_QUOTES, 'UTF-8');
+                    $idCitaStr = htmlspecialchars((string)($idCita ?? ''), ENT_QUOTES, 'UTF-8');
+                    $metodoStr = htmlspecialchars((string)($metodo ?? ''), ENT_QUOTES, 'UTF-8');
+                  ?>
+                    <tr>
+                      <td><strong>#<?= $idPagoStr !== '' ? $idPagoStr : '—' ?></strong></td>
+                      <td>Cita #<?= $idCitaStr !== '' ? $idCitaStr : '—' ?></td>
+                      <td><strong>$<?= number_format($montoNum, 2) ?></strong></td>
+                      <td><?= $metodoStr !== '' ? $metodoStr : 'No especificado' ?></td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
