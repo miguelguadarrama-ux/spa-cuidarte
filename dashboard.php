@@ -454,11 +454,10 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </section>
 
-        <!-- PESTAÑA: PAGOS -->
+       <!-- PESTAÑA: PAGOS -->
         <section id="tab-pagos" class="dashboard-tab">
           <div class="action-bar">
             <h3>Registros de <code>pagos</code></h3>
-            <button class="btn-action"><i class="fas fa-file-invoice-dollar"></i> Reporte Financiero</button>
           </div>
           <div class="table-wrapper">
             <table>
@@ -466,35 +465,57 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                   <th>ID Pago</th>
                   <th>ID Cita</th>
-                  <th>Monto</th>
+                  <th>Pagado</th>
                   <th>Método</th>
+                  <th>Falta por pagar</th>
                 </tr>
               </thead>
               <tbody>
                 <?php if (empty($pagos) || !is_array($pagos)): ?>
                   <tr>
-                    <td colspan="4" style="text-align: center; color: #777; padding: 20px;">
+                    <td colspan="5" style="text-align: center; color: #777; padding: 20px;">
                       No hay registros de pagos disponibles.
                     </td>
                   </tr>
                 <?php else: ?>
                   <?php foreach ($pagos as $pag):
-                    // Soporta distintos nombres de columna en PostgreSQL/PHP
                     $idPago   = $pag['id_pago'] ?? ($pag['id'] ?? ($pag['pago_id'] ?? ''));
                     $idCita   = $pag['id_cita'] ?? ($pag['cita_id'] ?? '');
-                    $montoRaw = $pag['monto'] ?? ($pag['total'] ?? ($pag['anticipo'] ?? 0));
-                    $metodo   = $pag['metodo'] ?? ($pag['modalidad_pago'] ?? ($pag['metodo_pago'] ?? 'Transferencia'));
+                    $montoRaw = $pag['monto'] ?? ($pag['anticipo'] ?? 0);
+                    $metodo   = (string)($pag['metodo'] ?? ($pag['modalidad_pago'] ?? ($pag['metodo_pago'] ?? 'Transferencia')));
 
-                    $montoNum = is_numeric($montoRaw) ? (float)$montoRaw : 0.0;
+                    $montoPagado = is_numeric($montoRaw) ? (float)$montoRaw : 0.0;
+
+                    // Intentamos obtener el total del servicio/cita si viene en la consulta
+                    $totalServicioRaw = $pag['precio_servicio'] ?? ($pag['total_servicio'] ?? ($pag['precio'] ?? ($pag['total_cita'] ?? null)));
+
+                    $esPagoCompleto = (stripos($metodo, 'completo') !== false) || (stripos($metodo, '100%') !== false);
+
+                    if ($esPagoCompleto) {
+                      $faltaPorPagar = 0.0;
+                    } elseif (is_numeric($totalServicioRaw) && (float)$totalServicioRaw > 0) {
+                      $faltaPorPagar = max(0.0, (float)$totalServicioRaw - $montoPagado);
+                    } else {
+                      // Respaldo si solo viene el anticipo del 20% (monto * 4 = 80% restante)
+                      $faltaPorPagar = max(0.0, round($montoPagado * 4, 2));
+                    }
+
                     $idPagoStr = htmlspecialchars((string)($idPago ?? ''), ENT_QUOTES, 'UTF-8');
                     $idCitaStr = htmlspecialchars((string)($idCita ?? ''), ENT_QUOTES, 'UTF-8');
-                    $metodoStr = htmlspecialchars((string)($metodo ?? ''), ENT_QUOTES, 'UTF-8');
+                    $metodoStr = htmlspecialchars($metodo !== '' ? $metodo : 'No especificado', ENT_QUOTES, 'UTF-8');
                   ?>
                     <tr>
                       <td><strong>#<?= $idPagoStr !== '' ? $idPagoStr : '—' ?></strong></td>
                       <td>Cita #<?= $idCitaStr !== '' ? $idCitaStr : '—' ?></td>
-                      <td><strong>$<?= number_format($montoNum, 2) ?></strong></td>
-                      <td><?= $metodoStr !== '' ? $metodoStr : 'No especificado' ?></td>
+                      <td><strong>$<?= number_format($montoPagado, 2) ?></strong></td>
+                      <td><?= $metodoStr ?></td>
+                      <td>
+                        <?php if ($faltaPorPagar <= 0): ?>
+                          <span style="color: #15803d; font-weight: 600;">$0.00 (Liquidado)</span>
+                        <?php else: ?>
+                          <span style="color: #b45309; font-weight: 700;">$<?= number_format($faltaPorPagar, 2) ?></span>
+                        <?php endif; ?>
+                      </td>
                     </tr>
                   <?php endforeach; ?>
                 <?php endif; ?>
