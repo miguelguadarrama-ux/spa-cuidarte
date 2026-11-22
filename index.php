@@ -443,19 +443,10 @@ include 'conexion.php';
       </div>
       <div class="footer-bottom">
         <span>© 2025 Consientt Spa. Todos los derechos reservados.</span>
-        <span>Diseño por Tu Estudio</span>
+        <span>Plutón</span>
       </div>
     </div>
   </footer>
-
-  <!-- Botón flotante de WhatsApp -->
-  <a href="https://wa.me/525512345678?text=Hola%2C%20quiero%20agendar%20una%20cita%20en%20Consientt%20Spa" 
-     class="whatsapp-float" 
-     target="_blank" 
-     rel="noopener noreferrer" 
-     aria-label="Contactar por WhatsApp">
-    <i class="fab fa-whatsapp"></i>
-  </a>
 
   <!-- JS -->
   <script src="script.js"></script>
