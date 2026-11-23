@@ -39,9 +39,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id_cliente = $filaNuevo['idcliente'];
         }
 
-     // 2. Obtener el ID, precio Y LA DURACIÓN del servicio
-        $stmtServicio = $conexion->prepare("SELECT id_servicio, precio, duracion FROM servicios WHERE nombre = ?");
-        $stmtServicio->execute([$servicio]);
+    // 2. Obtener el ID, precio Y LA DURACIÓN del servicio (por ID o por nombre)
+        if (is_numeric($servicio)) {
+            $stmtServicio = $conexion->prepare("SELECT id_servicio, precio, duracion FROM servicios WHERE id_servicio = ?");
+            $stmtServicio->execute([(int)$servicio]);
+        } else {
+            $stmtServicio = $conexion->prepare("SELECT id_servicio, precio, duracion FROM servicios WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(?))");
+            $stmtServicio->execute([$servicio]);
+        }
+
         $datosServicio = $stmtServicio->fetch(PDO::FETCH_ASSOC);
 
         if (!$datosServicio) {
@@ -51,16 +57,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $id_servicio = $datosServicio['id_servicio'];
         $total = $datosServicio['precio'];
-        $duracionMinutos = intval($datosServicio['duracion'] ?? 60); // Duración en minutos (por defecto 60 si viene vacía)
-        
+        $duracionMinutos = intval($datosServicio['duracion'] ?? 60);
+
         if ($modalidadPago === 'completo') {
-            $montoPago = $total; 
+            $montoPago = $total;
             $metodoTexto = 'Transferencia (Pago Completo)';
         } else {
             $montoPago = $total * 0.20; // Anticipo del 20%
             $metodoTexto = 'Transferencia (Anticipo 20%)';
         }
-
         // 3. Asignar empleado válido si no se envió uno
         if (!$id_empleado) {
             $stmtEmp = $conexion->query("SELECT id_empleado FROM empleados ORDER BY id_empleado ASC LIMIT 1");
