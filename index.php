@@ -428,16 +428,15 @@ include 'conexion.php';
         <div class="footer-col">
           <h4>Contacto</h4>
           <ul>
-            <li><a href="#">+52 55 1234 5678</a></li>
-            <li><a href="#">hola@consienttspa.com</a></li>
+            <li><a href="#">+52 55 3322530111</a></li>
+            <li><a href="#">miguel.guadarrama@alumnos.udg.mx</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4>Horarios</h4>
           <ul>
-            <li><a href="#">Lun - Vie: 9:00 - 20:00</a></li>
-            <li><a href="#">Sáb: 9:00 - 18:00</a></li>
-            <li><a href="#">Dom: Cerrado</a></li>
+            <li><a href="#">Lun - Dom: 9:00 - 20:00</a></li>
+            <li><a href="#">Sujeto a disponibilidad</a></li>
           </ul>
         </div>
       </div>
