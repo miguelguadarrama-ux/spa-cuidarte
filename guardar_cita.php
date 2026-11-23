@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id_cliente = $filaNuevo['idcliente'];
         }
 
-    // 2. Obtener el ID, precio Y LA DURACIÓN del servicio (por ID o por nombre)
+        // 2. Obtener el ID, precio Y LA DURACIÓN del servicio (por ID o por nombre)
         if (is_numeric($servicio)) {
             $stmtServicio = $conexion->prepare("SELECT id_servicio, precio, duracion FROM servicios WHERE id_servicio = ?");
             $stmtServicio->execute([(int)$servicio]);
@@ -66,6 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $montoPago = $total * 0.20; // Anticipo del 20%
             $metodoTexto = 'Transferencia (Anticipo 20%)';
         }
+
         // 3. Asignar empleado válido si no se envió uno
         if (!$id_empleado) {
             $stmtEmp = $conexion->query("SELECT id_empleado FROM empleados ORDER BY id_empleado ASC LIMIT 1");
@@ -87,8 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $timestampFin = $timestampInicio + ($duracionMinutos * 60);
         $fechaHoraFin = date('Y-m-d H:i:s', $timestampFin);
 
-        // 5. VALIDACIÓN INTELIGENTE DE CRUCE DE HORARIOS (RANGOS)
-        // Evita que un nuevo servicio se encime con una cita activa del mismo especialista
+        // 5. VALIDACIÓN INTELIGENTE DE CRUCE DE HORARIOS (RANGOS) — todos posicionales (?)
         $sqlCruces = "SELECT c.id_cita 
                       FROM citas c 
                       JOIN detalle_citas dc ON c.id_cita = dc.id_cita
@@ -97,17 +97,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                       AND c.estado != 'Cancelada' 
                       AND c.estado != 'Vencida'
                       AND (
-                          (:inicio_nuevo < (c.fecha_y_hora + (s.duracion || ' minutes')::interval)) 
+                          (? < (c.fecha_y_hora + (s.duracion || ' minutes')::interval)) 
                           AND 
-                          (:fin_nuevo > c.fecha_y_hora)
+                          (? > c.fecha_y_hora)
                       )";
                       
         $stmtCheck = $conexion->prepare($sqlCruces);
-        // Pasamos los parámetros de inicio y fin de la nueva cita que se quiere agendar
         $stmtCheck->execute([
-            'id_empleado' => $id_empleado,
-            'inicio_nuevo' => $fechaHoraInicio,
-            'fin_nuevo' => $fechaHoraFin
+            $id_empleado,
+            $fechaHoraInicio,
+            $fechaHoraFin
         ]);
         
         if ($stmtCheck->rowCount() > 0) {
@@ -145,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // 7. Insertar Cita con estado 'Por Validar'
         $insertCita = $conexion->prepare("INSERT INTO citas (id_cliente, id_empleado, fecha_y_hora, estado, total) VALUES (?, ?, ?, 'Por Validar', ?) RETURNING id_cita");
-        $insertCita->execute([$id_cliente, $id_empleado, $fechaHora, $total]);
+        $insertCita->execute([$id_cliente, $id_empleado, $fechaHoraInicio, $total]);
         $filaCita = $insertCita->fetch();
         $id_cita = $filaCita['id_cita'];
 
