@@ -314,7 +314,7 @@ include 'conexion.php';
                   Realiza tu transferencia del <strong>20% de anticipo</strong> para apartar tu lugar. El resto se liquida al asistir.
                 </p>
                 <div style="font-size: 0.85rem; color: #444; background: #fff; padding: 10px; border-radius: 6px; border: 1px dashed #d4bc96;">
-                  <strong>Banco:</strong> BBVA / Santander<br>
+                  <strong>Banco:</strong> BBVA<br>
                   <strong>CLABE:</strong> 012345678901234567<br>
                   <strong>Titular:</strong> Consientt Spa
                 </div>
@@ -446,10 +446,7 @@ include 'conexion.php';
       </div>
     </div>
   </footer>
-
-  <!-- JS -->
-  <script src="script.js"></script>
-  <!-- JS -->
+<!-- JS -->
   <script src="script.js"></script>
   <script>
     // Escuchar cuando cambien los selectores o la fecha (usando tus IDs exactos)
@@ -471,20 +468,45 @@ include 'conexion.php';
         if (!servicio || !fecha || !empleado) return;
 
         // Llamada AJAX al archivo PHP para calcular los horarios según la duración del servicio
-        fetch(`obtener_horarios.php?servicio=${servicio}&fecha=${fecha}&empleado=${empleado}`)
+        fetch(`obtener_horarios.php?servicio=${encodeURIComponent(servicio)}&fecha=${encodeURIComponent(fecha)}&empleado=${encodeURIComponent(empleado)}`)
             .then(response => response.json())
             .then(horarios => {
                 const contenedor = document.getElementById('horasGrid');
                 if (!contenedor) return;
                 contenedor.innerHTML = ''; // Limpiar horas anteriores
 
-                if (horarios.length === 0) {
+                if (!Array.isArray(horarios) || horarios.length === 0) {
+                    contenedor.innerHTML = '<p style="color: #999; grid-column: 1 / -1; text-align: center;">No hay horarios disponibles para esta combinación.</p>';
+                    return;
+                }
+
+                // Filtrar horarios para dejar ciclos de 90 minutos (1 hora y media)
+                const horariosHoraYMedia = [];
+                let ultimoMinuto = null;
+
+                horarios.forEach(hora => {
+                    const partes = String(hora).trim().split(':');
+                    if (partes.length < 2) return;
+
+                    const horasNum = parseInt(partes[0], 10);
+                    const minsNum = parseInt(partes[1], 10);
+                    if (Number.isNaN(horasNum) || Number.isNaN(minsNum)) return;
+
+                    const minutosActuales = horasNum * 60 + minsNum;
+
+                    if (ultimoMinuto === null || (minutosActuales - ultimoMinuto) >= 90) {
+                        horariosHoraYMedia.push(hora);
+                        ultimoMinuto = minutosActuales;
+                    }
+                });
+
+                if (horariosHoraYMedia.length === 0) {
                     contenedor.innerHTML = '<p style="color: #999; grid-column: 1 / -1; text-align: center;">No hay horarios disponibles para esta combinación.</p>';
                     return;
                 }
 
                 // Crear dinámicamente los botones de horarios dentro de tu grid
-                horarios.forEach(hora => {
+                horariosHoraYMedia.forEach(hora => {
                     const boton = document.createElement('button');
                     boton.type = 'button';
                     boton.className = 'btn-horario';
@@ -493,9 +515,11 @@ include 'conexion.php';
                     // Evento al hacer clic en un horario disponible
                     boton.addEventListener('click', function() {
                         document.querySelectorAll('.btn-horario').forEach(b => {
+                            b.classList.remove('active');
                             b.style.background = 'white';
                             b.style.color = '#333';
                         });
+                        boton.classList.add('active');
                         boton.style.background = '#3a1e3a';
                         boton.style.color = 'white';
 
