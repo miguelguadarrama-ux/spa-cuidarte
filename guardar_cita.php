@@ -39,10 +39,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id_cliente = $filaNuevo['idcliente'];
         }
 
-       // 2. Obtener el ID, precio Y LA DURACIÓN del servicio
+     // 2. Obtener el ID, precio Y LA DURACIÓN del servicio
         $stmtServicio = $conexion->prepare("SELECT id_servicio, precio, duracion FROM servicios WHERE nombre = ?");
         $stmtServicio->execute([$servicio]);
-        $datosServicio = $stmtServicio$datosServicio = $stmtServicio->fetch();
+        $datosServicio = $stmtServicio->fetch(PDO::FETCH_ASSOC);
 
         if (!$datosServicio) {
             echo json_encode(["status" => "error", "message" => "El servicio seleccionado no existe en la base de datos."]);
@@ -109,6 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo json_encode(["status" => "error", "message" => "Lo sentimos, el profesional ya tiene otra cita ocupada en ese intervalo de tiempo. Elige un horario distinto."]);
             exit;
         }
+
         // 6. PROCESAR Y CONVERTIR EL COMPROBANTE A BASE64 (Data URI)
         $comprobanteBase64 = null;
         if (isset($_FILES['comprobante']) && $_FILES['comprobante']['error'] === UPLOAD_ERR_OK) {
