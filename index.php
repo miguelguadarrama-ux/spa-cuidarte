@@ -18,7 +18,6 @@ include 'conexion.php';
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
   <!-- Header -->
   <header>
     <div class="container header-flex">
@@ -31,12 +30,15 @@ include 'conexion.php';
         <a href="#experiencia">Sobre Nosotros</a>
         <a href="#contacto">Contacto</a>
         
-     <?php if (isset($_SESSION['nombre'])): ?>
-          <!-- Contenedor estilizado para el usuario y cerrar sesión -->
+        <?php if (isset($_SESSION['nombre'])): ?>
+          <!-- Contenedor estilizado para el usuario, sus citas y cerrar sesión -->
           <div class="user-session-container">
             <span class="user-greeting">
               <i class="fas fa-user-circle"></i> ¡Hola, <?php echo htmlspecialchars($_SESSION['nombre']); ?>!
             </span>
+            <a href="mis_citas.php" class="btn-mis-citas" style="margin-right: 8px; text-decoration: none; font-weight: 600;">
+              <i class="fas fa-calendar-check"></i> Mis Citas
+            </a>
             <a href="logout.php" class="btn-cerrar-sesion">
               <i class="fas fa-sign-out-alt"></i> Salir
             </a>
