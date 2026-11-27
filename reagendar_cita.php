@@ -2,6 +2,8 @@
 session_start();
 include 'conexion.php';
 
+date_default_timezone_set('America/Mexico_City');
+
 $id_cita = $_GET['id'] ?? $_POST['id_cita'] ?? null;
 
 if (!$id_cita || !is_numeric($id_cita)) {
@@ -9,10 +11,20 @@ if (!$id_cita || !is_numeric($id_cita)) {
     exit;
 }
 
+$hoy = date('Y-m-d');
 $mensaje = "";
-$tipoMensaje = "";
 
-// Si se envía el formulario para guardar el nuevo horario
+// Generar bloques de 90 minutos (desde 09:00 hasta 18:00 para cerrar a las 20:00)
+$bloques90 = [];
+$inicioMinutos = 9 * 60; // 09:00
+$finMinutos = 18 * 60;   // 18:00
+for ($m = $inicioMinutos; $m <= $finMinutos; $m += 90) {
+    $horas = floor($m / 60);
+    $mins = $m % 60;
+    $bloques90[] = sprintf('%02d:%02d', $horas, $mins);
+}
+
+// Procesar formulario al guardar
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nuevaFecha = trim($_POST['nueva_fecha'] ?? '');
     $nuevaHora = trim($_POST['nueva_hora'] ?? '');
@@ -20,10 +32,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (empty($nuevaFecha) || empty($nuevaHora)) {
         $mensaje = "Selecciona una nueva fecha y una hora.";
-        $tipoMensaje = "error";
+    } elseif ($nuevaFecha < $hoy) {
+        $mensaje = "No puedes reagendar a una fecha pasada. Selecciona hoy o una fecha posterior.";
+    } elseif (!in_array($nuevaHora, $bloques90, true)) {
+        $mensaje = "Selecciona un horario válido en intervalos de 90 minutos (hasta las 18:00).";
     } else {
-        $horaLimpia = (strlen($nuevaHora) >= 5) ? substr($nuevaHora, 0, 5) . ':00' : '09:00:00';
-        $nuevaFechaHora = $nuevaFecha . ' ' . $horaLimpia;
+        $nuevaFechaHora = $nuevaFecha . ' ' . $nuevaHora . ':00';
 
         try {
             if ($nuevoEmpleado && is_numeric($nuevoEmpleado)) {
@@ -37,8 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             header("Location: dashboard.php?reagendada=1");
             exit;
         } catch (Exception $e) {
-            $mensaje = "No se pudo reagendar: " . $e->getMessage();
-            $tipoMensaje = "error";
+            $mensaje = "No se pudo reagendar la cita: " . $e->getMessage();
         }
     }
 }
@@ -59,10 +72,11 @@ if (!$cita) {
     exit;
 }
 
-// Consultar lista de empleados para permitir cambio opcional
+// Consultar empleados disponibles
 $empleados = $conexion->query("SELECT id_empleado, nombre FROM empleados ORDER BY nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
 
 $fechaActual = date('Y-m-d', strtotime($cita['fecha_y_hora']));
+$fechaInput = ($fechaActual < $hoy) ? $hoy : $fechaActual;
 $horaActual = date('H:i', strtotime($cita['fecha_y_hora']));
 ?>
 <!DOCTYPE html>
@@ -147,12 +161,18 @@ $horaActual = date('H:i', strtotime($cita['fecha_y_hora']));
 
             <div class="campo-form">
                 <label for="nueva_fecha">Nueva fecha</label>
-                <input type="date" id="nueva_fecha" name="nueva_fecha" value="<?= htmlspecialchars($fechaActual) ?>" required>
+                <input type="date" id="nueva_fecha" name="nueva_fecha" min="<?= $hoy ?>" value="<?= htmlspecialchars($fechaInput) ?>" required>
             </div>
 
             <div class="campo-form">
-                <label for="nueva_hora">Nueva hora</label>
-                <input type="time" id="nueva_hora" name="nueva_hora" value="<?= htmlspecialchars($horaActual) ?>" required>
+                <label for="nueva_hora">Nueva hora (bloques de 90 min, hasta las 18:00)</label>
+                <select id="nueva_hora" name="nueva_hora" required>
+                    <?php foreach ($bloques90 as $bloque): ?>
+                        <option value="<?= $bloque ?>" <?= ($bloque === $horaActual) ? 'selected' : '' ?>>
+                            <?= $bloque ?> hrs
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <div class="campo-form">
