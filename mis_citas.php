@@ -16,11 +16,81 @@ $stmtCliente = $conexion->prepare("SELECT idcliente, nombre FROM cliente WHERE L
 $stmtCliente->execute([$correoUsuario]);
 $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
 
-$citas = [];
-if ($cliente) {
-    $idCliente = $cliente['idcliente'];
-    $nombreUsuario = $cliente['nombre'] ?: $nombreUsuario;
+$idCliente = $cliente ? (int)$cliente['idcliente'] : 0;
+if ($cliente && !empty($cliente['nombre'])) {
+    $nombreUsuario = $cliente['nombre'];
+}
 
+$mensajeExito = "";
+$mensajeError = "";
+
+// Procesar subida de comprobante desde Mis Citas
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['id_cita_comprobante']) && $idCliente > 0) {
+    $idCitaSubida = (int)$_POST['id_cita_comprobante'];
+    $tipoAbono = $_POST['tipo_abono'] ?? 'restante';
+
+    if (empty($_FILES['comprobante']['tmp_name']) || $_FILES['comprobante']['error'] !== UPLOAD_ERR_OK) {
+        $mensajeError = "Selecciona un archivo de comprobante válido (JPG, PNG o PDF).";
+    } elseif ($_FILES['comprobante']['size'] > 5 * 1024 * 1024) {
+        $mensajeError = "El comprobante no debe superar los 5 MB.";
+    } else {
+        // Verificar que la cita pertenezca al cliente actual
+        $stmtVerify = $conexion->prepare("
+            SELECT c.id_cita, COALESCE(c.total, s.precio, 0) AS total, COALESCE(p.monto, 0) AS pagado
+            FROM citas c
+            LEFT JOIN detalle_citas dc ON c.id_cita = dc.id_cita
+            LEFT JOIN servicios s ON dc.id_servicio = s.id_servicio
+            LEFT JOIN pagos p ON c.id_cita = p.id_cita
+            WHERE c.id_cita = ? AND c.id_cliente = ?
+            LIMIT 1
+        ");
+        $stmtVerify->execute([$idCitaSubida, $idCliente]);
+        $citaActual = $stmtVerify->fetch(PDO::FETCH_ASSOC);
+
+        if (!$citaActual) {
+            $mensajeError = "No se encontró la cita seleccionada.";
+        } else {
+            $mime = mime_content_type($_FILES['comprobante']['tmp_name']) ?: 'image/jpeg';
+            $binario = file_get_contents($_FILES['comprobante']['tmp_name']);
+            $comprobanteBase64 = 'data:' . $mime . ';base64,' . base64_encode($binario);
+
+            $totalCita = (float)$citaActual['total'];
+            $pagadoPrevio = (float)$citaActual['pagado'];
+            $faltante = max(0, $totalCita - $pagadoPrevio);
+
+            $nuevoMontoPagado = ($tipoAbono === 'completo') ? $totalCita : ($pagadoPrevio + $faltante);
+
+            try {
+                $conexion->beginTransaction();
+
+                $stmtChkPago = $conexion->prepare("SELECT COUNT(*) FROM pagos WHERE id_cita = ?");
+                $stmtChkPago->execute([$idCitaSubida]);
+
+                if ((int)$stmtChkPago->fetchColumn() > 0) {
+                    $stmtUpdPago = $conexion->prepare("UPDATE pagos SET monto = ?, comprobante_url = ? WHERE id_cita = ?");
+                    $stmtUpdPago->execute([$nuevoMontoPagado, $comprobanteBase64, $idCitaSubida]);
+                } else {
+                    $stmtInsPago = $conexion->prepare("INSERT INTO pagos (id_cita, monto, metodo_pago, comprobante_url) VALUES (?, ?, 'Transferencia', ?)");
+                    $stmtInsPago->execute([$idCitaSubida, $nuevoMontoPagado, $comprobanteBase64]);
+                }
+
+                $stmtUpdCita = $conexion->prepare("UPDATE citas SET estado = 'Por Validar' WHERE id_cita = ?");
+                $stmtUpdCita->execute([$idCitaSubida]);
+
+                $conexion->commit();
+                $mensajeExito = "Comprobante enviado para la Cita #" . $idCitaSubida . ". Quedará en estado Por Validar y será aprobada por administración.";
+            } catch (Exception $e) {
+                if ($conexion->inTransaction()) {
+                    $conexion->rollBack();
+                }
+                $mensajeError = "No se pudo guardar el comprobante: " . $e->getMessage();
+            }
+        }
+    }
+}
+
+$citas = [];
+if ($idCliente > 0) {
     $sql = "SELECT 
                 c.id_cita,
                 c.fecha_y_hora,
@@ -30,7 +100,7 @@ if ($cliente) {
                 COALESCE(s.duracion, 90) AS duracion,
                 COALESCE(e.nombre, 'Por asignar') AS empleado,
                 COALESCE(p.monto, 0) AS monto_pagado,
-                COALESCE(p.metodo_pago, 'Transferencia') AS metodo_pago
+                CASE WHEN p.comprobante_url IS NOT NULL AND p.comprobante_url <> '' THEN 1 ELSE 0 END AS tiene_comprobante
             FROM citas c
             LEFT JOIN detalle_citas dc ON c.id_cita = dc.id_cita
             LEFT JOIN servicios s ON dc.id_servicio = s.id_servicio
@@ -91,7 +161,6 @@ foreach ($citas as $item) {
         .brand {
             font-size: 1.25rem;
             font-weight: 700;
-            letter-spacing: 0.4px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -111,20 +180,31 @@ foreach ($citas as $item) {
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            transition: 0.2s ease;
         }
-        .btn-dorado {
-            background: var(--dorado);
-            color: #1f1421;
-        }
-        .btn-outline {
-            border: 1px solid rgba(255,255,255,0.35);
-            color: #fff;
-        }
+        .btn-dorado { background: var(--dorado); color: #1f1421; }
+        .btn-outline { border: 1px solid rgba(255,255,255,0.35); color: #fff; }
         .contenedor {
             max-width: 1050px;
             margin: 32px auto;
             padding: 0 20px 50px;
+        }
+        .alerta-ok {
+            background: #e6f7ed;
+            color: #165b31;
+            border: 1px solid #a8dfc0;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .alerta-err {
+            background: #fde8e8;
+            color: #9b1c1c;
+            border: 1px solid #f5b5b5;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 600;
         }
         .hero-resumen {
             background: #fff;
@@ -139,21 +219,9 @@ foreach ($citas as $item) {
             flex-wrap: wrap;
             gap: 18px;
         }
-        .hero-resumen h1 {
-            margin: 0 0 6px;
-            font-size: 1.55rem;
-            color: var(--morado);
-        }
-        .hero-resumen p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 0.95rem;
-        }
-        .kpis {
-            display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
+        .hero-resumen h1 { margin: 0 0 6px; font-size: 1.55rem; color: var(--morado); }
+        .hero-resumen p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+        .kpis { display: flex; gap: 14px; flex-wrap: wrap; }
         .kpi {
             background: var(--crema);
             border: 1px solid #eadcc7;
@@ -161,17 +229,8 @@ foreach ($citas as $item) {
             padding: 12px 18px;
             min-width: 145px;
         }
-        .kpi span {
-            display: block;
-            font-size: 0.78rem;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .kpi strong {
-            font-size: 1.25rem;
-            color: var(--morado);
-        }
+        .kpi span { display: block; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; }
+        .kpi strong { font-size: 1.25rem; color: var(--morado); }
         .citas-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -188,43 +247,16 @@ foreach ($citas as $item) {
             justify-content: space-between;
             gap: 14px;
         }
-        .cita-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        .cita-id {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--dorado);
-            text-transform: uppercase;
-        }
-        .cita-card h3 {
-            margin: 3px 0 0;
-            font-size: 1.15rem;
-            color: var(--morado);
-        }
-        .badge {
-            padding: 5px 11px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
+        .cita-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .cita-id { font-size: 0.8rem; font-weight: 700; color: var(--dorado); text-transform: uppercase; }
+        .cita-card h3 { margin: 3px 0 0; font-size: 1.15rem; color: var(--morado); }
+        .badge { padding: 5px 11px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
         .badge-ok { background: #e6f7ed; color: #1b6b3a; }
         .badge-warn { background: #fff4db; color: #8a5a00; }
         .badge-bad { background: #fde8e8; color: #9b1c1c; }
         .badge-info { background: #f3e8f5; color: var(--morado); }
-        .datos-lista {
-            font-size: 0.92rem;
-            color: #3d3642;
-            line-height: 1.65;
-        }
-        .datos-lista i {
-            width: 18px;
-            color: var(--morado);
-        }
+        .datos-lista { font-size: 0.92rem; color: #3d3642; line-height: 1.65; }
+        .datos-lista i { width: 18px; color: var(--morado); }
         .pago-box {
             background: #fcfaf7;
             border: 1px dashed #d8c3a5;
@@ -232,45 +264,44 @@ foreach ($citas as $item) {
             padding: 13px 14px;
             font-size: 0.9rem;
         }
-        .pago-estado-completo {
-            color: #1b6b3a;
-            font-weight: 700;
+        .pago-estado-completo { color: #1b6b3a; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .pago-estado-anticipo { color: #8a5a00; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .pago-falta { margin-top: 4px; color: var(--morado); font-weight: 600; }
+        .form-comprobante {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ece3d5;
             display: flex;
-            align-items: center;
-            gap: 6px;
+            flex-direction: column;
+            gap: 8px;
         }
-        .pago-estado-anticipo {
-            color: #8a5a00;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 4px;
-        }
-        .pago-falta {
-            margin-top: 4px;
-            color: var(--morado);
-            font-weight: 600;
-        }
-        .empty-state {
+        .form-comprobante input[type="file"],
+        .form-comprobante select {
+            font-size: 0.84rem;
+            padding: 6px 8px;
+            border-radius: 7px;
+            border: 1px solid #d5cdd9;
             background: #fff;
-            border-radius: 16px;
-            padding: 40px 24px;
-            text-align: center;
-            box-shadow: 0 8px 22px rgba(58, 30, 58, 0.06);
         }
-        .empty-state i {
-            font-size: 2.2rem;
-            color: var(--dorado);
-            margin-bottom: 10px;
+        .btn-subir-comp {
+            background: var(--morado);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .nota-validacion {
+            font-size: 0.78rem;
+            color: #6c6570;
         }
     </style>
 </head>
 <body>
     <header class="topbar">
-        <div class="brand">
-            <i class="fas fa-spa"></i> Consientt Spa
-        </div>
+        <div class="brand"><i class="fas fa-spa"></i> Consientt Spa</div>
         <div class="nav-actions">
             <a href="index.php#citas" class="btn-nav btn-dorado"><i class="fas fa-plus-circle"></i> Agendar Cita</a>
             <a href="index.php" class="btn-nav btn-outline"><i class="fas fa-home"></i> Inicio</a>
@@ -279,6 +310,13 @@ foreach ($citas as $item) {
     </header>
 
     <main class="contenedor">
+        <?php if ($mensajeExito): ?>
+            <div class="alerta-ok"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($mensajeExito) ?></div>
+        <?php endif; ?>
+        <?php if ($mensajeError): ?>
+            <div class="alerta-err"><i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($mensajeError) ?></div>
+        <?php endif; ?>
+
         <section class="hero-resumen">
             <div>
                 <h1>Mis Citas — <?= htmlspecialchars($nombreUsuario) ?></h1>
@@ -297,11 +335,9 @@ foreach ($citas as $item) {
         </section>
 
         <?php if (empty($citas)): ?>
-            <div class="empty-state">
-                <i class="far fa-calendar-times"></i>
+            <div class="pago-box" style="text-align:center; padding:32px;">
                 <h3>Aún no tienes citas registradas</h3>
-                <p>Agenda tu próximo tratamiento y aquí podrás revisar tus horarios y pagos.</p>
-                <a href="index.php#citas" class="btn-nav btn-dorado"><i class="fas fa-calendar-plus"></i> Agendar ahora</a>
+                <a href="index.php#citas" class="btn-nav btn-dorado" style="margin-top:10px;">Agendar ahora</a>
             </div>
         <?php else: ?>
             <div class="citas-grid">
@@ -312,16 +348,18 @@ foreach ($citas as $item) {
                     $anticipoEsperado = round($total * 0.20, 2);
                     $esCancelada = strcasecmp(trim($cita['estado_cita']), 'Cancelada') === 0;
                     $esCompletada = strcasecmp(trim($cita['estado_cita']), 'Completada') === 0;
+                    $esPorValidar = strcasecmp(trim($cita['estado_cita']), 'Por Validar') === 0;
 
-                    $pagoCompleto = (!$esCancelada) && ($total > 0) && ($restante <= 0.01 || ($pagado >= $total && $total > 0));
+                    $pagoCompleto = (!$esCancelada) && ($total > 0) && ($restante <= 0.01);
                     $dioAnticipo = (!$esCancelada) && (!$pagoCompleto) && ($pagado > 0);
+                    $permiteSubirComprobante = (!$esCancelada) && (!$pagoCompleto);
 
                     $claseBadge = 'badge-info';
                     if ($esCancelada) {
                         $claseBadge = 'badge-bad';
                     } elseif ($esCompletada || strcasecmp(trim($cita['estado_cita']), 'Confirmada') === 0) {
                         $claseBadge = 'badge-ok';
-                    } elseif (strcasecmp(trim($cita['estado_cita']), 'Por Validar') === 0) {
+                    } elseif ($esPorValidar) {
                         $claseBadge = 'badge-warn';
                     }
 
@@ -357,7 +395,7 @@ foreach ($citas as $item) {
                                     <i class="fas fa-coins"></i> Anticipo pagado ($<?= number_format($pagado, 2) ?>)
                                 </div>
                                 <div class="pago-falta">
-                                    Falta por pagar: $<?= number_format($restante, 2) ?> (en recepción o transferencia)
+                                    Falta por pagar: $<?= number_format($restante, 2) ?>
                                 </div>
                             <?php else: ?>
                                 <div class="pago-estado-anticipo">
@@ -366,6 +404,27 @@ foreach ($citas as $item) {
                                 <div class="pago-falta">
                                     Falta por pagar: $<?= number_format($restante > 0 ? $restante : $total, 2) ?>
                                 </div>
+                            <?php endif; ?>
+
+                            <?php if ($esPorValidar): ?>
+                                <div class="nota-validacion" style="margin-top:6px; color:#8a5a00; font-weight:600;">
+                                    Comprobante en revisión: será aprobada por administración.
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($permiteSubirComprobante): ?>
+                                <form method="POST" enctype="multipart/form-data" class="form-comprobante">
+                                    <input type="hidden" name="id_cita_comprobante" value="<?= (int)$cita['id_cita'] ?>">
+                                    <select name="tipo_abono">
+                                        <option value="restante">Cubrir restante ($<?= number_format($restante > 0 ? $restante : $total, 2) ?>)</option>
+                                        <option value="completo">Registrar pago completo ($<?= number_format($total, 2) ?>)</option>
+                                    </select>
+                                    <input type="file" name="comprobante" accept="image/*,application/pdf" required>
+                                    <button type="submit" class="btn-subir-comp">
+                                        <i class="fas fa-upload"></i> Subir comprobante
+                                    </button>
+                                    <span class="nota-validacion">Al enviarlo, tu cita quedará pendiente y será aprobada por administración.</span>
+                                </form>
                             <?php endif; ?>
                         </div>
                     </article>
