@@ -227,7 +227,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
 
       <div class="content-body">
         
-      <!-- PESTAÑA: CITAS -->
+<!-- PESTAÑA: CITAS -->
 <section id="tab-citas" class="dashboard-tab active">
   <div class="action-bar">
     <h3>Registros de <code>citas</code></h3>
@@ -308,6 +308,36 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
                     </a>
                 <?php endif; ?>
 
+                <!-- 5. Comunicación por WhatsApp con detalle de cita y pago -->
+                <?php
+                  $totalCita = (float)($cita['total'] ?? 0);
+                  $pagadoCita = (float)($cita['monto_pagado'] ?? 0);
+                  $faltaPagar = max(0, $totalCita - $pagadoCita);
+
+                  if (strcasecmp(trim($cita['estado']), 'Cancelada') === 0) {
+                      $detalleMsg = "Te contactamos de Consientt Spa respecto a tu cita #" . $cita['id_cita'] .
+                                    " programada para " . $cita['fecha_y_hora'] . " (actualmente cancelada).";
+                  } elseif ($faltaPagar <= 0.01 && $totalCita > 0) {
+                      $detalleMsg = "Hola " . ($cita['cliente_nombre'] ?? '') . ", tu cita #" . $cita['id_cita'] .
+                                    " en Consientt Spa está validada para el " . $cita['fecha_y_hora'] .
+                                    ". Tu pago está completo ($" . number_format($totalCita, 2) . ").";
+                  } else {
+                      $detalleMsg = "Hola " . ($cita['cliente_nombre'] ?? '') . ", te confirmamos tu cita #" . $cita['id_cita'] .
+                                    " en Consientt Spa para el " . $cita['fecha_y_hora'] .
+                                    ". Saldo pendiente por pagar: $" . number_format($faltaPagar, 2) .
+                                    " (total del servicio: $" . number_format($totalCita, 2) . ").";
+                  }
+
+                  $telRaw = preg_replace('/\D+/', '', (string)($cita['cliente_telefono'] ?? ''));
+                  if (strlen($telRaw) === 10) {
+                      $telRaw = '52' . $telRaw;
+                  }
+                  $waUrl = "https://wa.me/" . $telRaw . "?text=" . urlencode($detalleMsg);
+                ?>
+                <a href="<?php echo htmlspecialchars($waUrl); ?>" target="_blank" rel="noopener noreferrer" title="Enviar mensaje por WhatsApp" style="background: #25D366; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+
               </td>
             </tr>
           <?php endforeach; ?>
@@ -318,54 +348,70 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
 </section>
 
        <!-- PESTAÑA: CLIENTES -->
-        <section id="tab-clientes" class="dashboard-tab">
-          <div class="action-bar">
-            <h3>Registros de <code>clientes</code></h3>
-            <button class="btn-action" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Añadir Cliente</button>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID Cliente</th>
-                  <th>Nombre Completo</th>
-                  <th>Teléfono</th>
-                  <th>Correo Electrónico</th>
-                  <th>Acciones</th> <!-- 📌 NUEVA COLUMNA -->
-                </tr>
-              </thead>
-              <tbody>
-                <?php if (empty($clientes)): ?>
-                  <tr><td colspan="5" style="text-align: center;">No hay clientes registrados.</td></tr>
-                <?php else: ?>
-                  <?php foreach ($clientes as $cli): ?>
-                    <tr>
-                      <td><strong>#<?php echo $cli['idcliente']; ?></strong></td>
-                      <td><?php echo htmlspecialchars($cli['nombre']); ?></td>
-                      <td><?php echo htmlspecialchars($cli['telefono'] ?? 'N/D'); ?></td>
-                      <td><?php echo htmlspecialchars($cli['correo']); ?></td>
-                      
-                      <!-- 📌 BOTONES DE ACCIÓN PARA CLIENTES -->
-                      <td style="display: flex; gap: 6px; align-items: center;">
-                        
-                        <!-- Botón para Editar (puedes enlazarlo a un script de edición) -->
-                        <a href="editar_cliente.php?id=<?php echo $cli['idcliente']; ?>" title="Editar Cliente" style="background: #C9A96E; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
-                            <i class="fas fa-edit"></i>
-                        </a>
+<section id="tab-clientes" class="dashboard-tab">
+  <div class="action-bar">
+    <h3>Registros de <code>clientes</code></h3>
+    <button class="btn-action" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Añadir Cliente</button>
+  </div>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID Cliente</th>
+          <th>Nombre Completo</th>
+          <th>Teléfono</th>
+          <th>Correo Electrónico</th>
+          <th>Acciones</th> <!-- 📌 NUEVA COLUMNA -->
+        </tr>
+      </thead>
+      <tbody>
+        <?php if (empty($clientes)): ?>
+          <tr><td colspan="5" style="text-align: center;">No hay clientes registrados.</td></tr>
+        <?php else: ?>
+          <?php foreach ($clientes as $cli): ?>
+            <?php
+              $telLimpio = preg_replace('/\D+/', '', (string)($cli['telefono'] ?? ''));
+              if (strlen($telLimpio) === 10) {
+                  $telLimpio = '52' . $telLimpio;
+              }
+              $mensajeCli = "Hola " . ($cli['nombre'] ?? '') . ", te saludamos de Consientt Spa.";
+              $urlWhatsCli = !empty($telLimpio)
+                  ? "https://wa.me/" . $telLimpio . "?text=" . urlencode($mensajeCli)
+                  : "";
+            ?>
+            <tr>
+              <td><strong>#<?php echo $cli['idcliente']; ?></strong></td>
+              <td><?php echo htmlspecialchars($cli['nombre']); ?></td>
+              <td><?php echo htmlspecialchars($cli['telefono'] ?? 'N/D'); ?></td>
+              <td><?php echo htmlspecialchars($cli['correo']); ?></td>
+              
+              <!-- 📌 BOTONES DE ACCIÓN PARA CLIENTES -->
+              <td style="display: flex; gap: 6px; align-items: center;">
 
-                        <!-- Botón para Eliminar / Dar de baja -->
-                        <a href="eliminar_cliente.php?id=<?php echo $cli['idcliente']; ?>" title="Dar de baja" onclick="return confirm('¿Estás seguro de eliminar a este cliente? Se borrarán sus datos del sistema.');" style="background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
-                            <i class="fas fa-trash-alt"></i>
-                        </a>
-
-                      </td>
-                    </tr>
-                  <?php endforeach; ?>
+                <?php if (!empty($urlWhatsCli)): ?>
+                    <a href="<?php echo htmlspecialchars($urlWhatsCli); ?>" target="_blank" rel="noopener noreferrer" title="Enviar WhatsApp al cliente" style="background: #25D366; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
                 <?php endif; ?>
-              </tbody>
-            </table>
-          </div>
-        </section>
+                
+                <!-- Botón para Editar (puedes enlazarlo a un script de edición) -->
+                <a href="editar_cliente.php?id=<?php echo $cli['idcliente']; ?>" title="Editar Cliente" style="background: #C9A96E; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                    <i class="fas fa-edit"></i>
+                </a>
+
+                <!-- Botón para Eliminar / Dar de baja -->
+                <a href="eliminar_cliente.php?id=<?php echo $cli['idcliente']; ?>" title="Dar de baja" onclick="return confirm('¿Estás seguro de eliminar a este cliente? Se borrarán sus datos del sistema.');" style="background: #dc3545; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none;">
+                    <i class="fas fa-trash-alt"></i>
+                </a>
+
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
+</section>
 
      <!-- PESTAÑA: EMPLEADOS -->
         <section id="tab-empleados" class="dashboard-tab">
