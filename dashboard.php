@@ -511,7 +511,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </section>
 
-      <!-- PESTAÑA: PAGOS -->
+     <!-- PESTAÑA: PAGOS -->
 <section id="tab-pagos" class="dashboard-tab">
   <div class="action-bar">
     <h3>Registros de <code>pagos</code></h3>
