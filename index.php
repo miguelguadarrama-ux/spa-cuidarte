@@ -282,23 +282,23 @@ include 'conexion.php';
                 </select>
               </div>
 
-              <!-- 📌 Selector de Empleado / Especialista -->
-              <div class="form-group" style="margin-bottom: 15px;">
-                <label for="id_empleado">Especialista deseado</label>
-                <select id="id_empleado" name="id_empleado" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
-                  <option value="" selected>Asignar automáticamente (El primero disponible)</option>
-                  <?php
-                    try {
-                        $stmtEmpleadosTab = $conexion->query("SELECT id_empleado, nombre FROM empleados ORDER BY nombre ASC");
-                        while ($rowEmp = $stmtEmpleadosTab->fetch(PDO::FETCH_ASSOC)) {
-                            echo '<option value="' . $rowEmp['id_empleado'] . '">' . htmlspecialchars($rowEmp['nombre']) . '</option>';
-                        }
-                    } catch (Exception $e) {
-                        // Si hay algún detalle con la conexión, no rompe la página
-                    }
-                  ?>
-                </select>
-              </div>
+             <!-- 📌 Selector de Empleado / Especialista -->
+<div class="form-group" style="margin-bottom: 15px;">
+  <label for="id_empleado">Especialista deseado</label>
+  <select id="id_empleado" name="id_empleado" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+    <option value="" disabled selected>Selecciona un especialista</option>
+    <?php
+      try {
+          $stmtEmpleadosTab = $conexion->query("SELECT id_empleado, nombre FROM empleados ORDER BY nombre ASC");
+          while ($rowEmp = $stmtEmpleadosTab->fetch(PDO::FETCH_ASSOC)) {
+              echo '<option value="' . (int)$rowEmp['id_empleado'] . '">' . htmlspecialchars($rowEmp['nombre'], ENT_QUOTES, 'UTF-8') . '</option>';
+          }
+      } catch (Exception $e) {
+          // Si hay algún detalle con la conexión, no rompe la página
+      }
+    ?>
+  </select>
+</div>
 
               <!-- Selector de modalidad de pago -->
               <div class="form-group" style="margin-bottom: 15px;">
