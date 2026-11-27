@@ -242,7 +242,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
           <th>Fecha y Hora</th>
           <th>Estado</th>
           <th>Total</th>
-          <th>Acciones</th> <!-- 📌 NUEVA COLUMNA -->
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -250,6 +250,7 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
           <tr><td colspan="7" style="text-align: center;">No hay citas registradas.</td></tr>
         <?php else: ?>
           <?php foreach ($citas as $cita): ?>
+            <?php $yaPaso = strtotime($cita['fecha_y_hora']) < time(); ?>
             <tr>
               <td><strong>#<?php echo $cita['id_cita']; ?></strong></td>
               <td><?php echo htmlspecialchars($cita['cliente_nombre']); ?></td>
@@ -258,9 +259,15 @@ $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
               <td><span class="status-badge <?php echo htmlspecialchars($cita['clase_estado']); ?>"><?php echo htmlspecialchars($cita['estado_visual']); ?></span></td>
               <td><strong>$<?php echo number_format($cita['total'], 2); ?></strong></td>
               
-              <!-- 📌 BOTONES DE ACCIÓN POR CITA -->
+              <!-- BOTONES DE ACCIÓN POR CITA -->
               <td style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                
+
+                <?php if ($yaPaso): ?>
+                    <span style="font-size: 0.75rem; color: #856404; background: #fff3cd; padding: 4px 8px; border-radius: 6px; font-weight: 600;">
+                        Ya pasó su hora
+                    </span>
+                <?php endif; ?>
+
                 <!-- 1. Ver Comprobante Base64 -->
                 <?php if (!empty($cita['comprobante_url'])): ?>
                     <button type="button" onclick="verComprobante('<?php echo $cita['comprobante_url']; ?>')" class="btn-accion" title="Ver Comprobante de Pago" style="background: #C9A96E; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer;">
