@@ -80,7 +80,14 @@ $stmt_servicios = $conexion->query("SELECT * FROM servicios ORDER BY id_servicio
 $servicios = $stmt_servicios->fetchAll(PDO::FETCH_ASSOC);
 
 // 5. OBTENER PAGOS
-$stmt_pagos = $conexion->query("SELECT * FROM pagos ORDER BY id_pago DESC");
+$stmt_pagos = $conexion->query("
+    SELECT
+        p.*,
+        c.total AS total_cita
+    FROM pagos p
+    LEFT JOIN citas c ON p.id_cita = c.id_cita
+    ORDER BY p.id_pago DESC
+");
 $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
