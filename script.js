@@ -283,41 +283,35 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(texto => {
         console.log("Respuesta del servidor:", texto);
         try {
-          const data = JSON.parse(texto);
-          if (data.status === 'success') {
-            const numeroWhatsApp = "523322530111";
-            const mensajeWp = encodeURIComponent("Hola, acabo de agendar mi cita en Consientt Spa y aquí está mi comprobante de transferencia.");
+  const data = JSON.parse(texto);
+  if (data.status === 'success') {
+    if (mensajeConfirmacion) {
+      mensajeConfirmacion.innerHTML = `
+        <strong>${data.message}</strong><br>
+        <p style="font-size: 0.9rem; margin-top: 6px; margin-bottom: 0;">Tu espacio está <strong>Por Validar</strong> y te mandaremos mensaje por WhatsApp.</p>
+      `;
 
-            if (mensajeConfirmacion) {
-              mensajeConfirmacion.innerHTML = `
-                <strong>${data.message}</strong><br><br>
-                <p style="font-size: 0.9rem; margin-bottom: 10px;">Haz clic en el siguiente botón para enviarnos tu comprobante por WhatsApp y validar tu espacio de inmediato:</p>
-                <a href="https://wa.me/${numeroWhatsApp}?text=${mensajeWp}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.95rem;">
-                  <i class="fab fa-whatsapp"></i> Enviar comprobante por WhatsApp
-                </a>
-              `;
+      mensajeConfirmacion.classList.add('show');
+      mensajeConfirmacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-              mensajeConfirmacion.classList.add('show');
-              mensajeConfirmacion.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-
-            setTimeout(() => {
-              form.reset();
-              if (mensajeConfirmacion) mensajeConfirmacion.classList.remove('show');
-              if (servicioSelect) servicioSelect.selectedIndex = 0;
-              if (inputFechaCita) {
-                const hoyStr = new Date().toISOString().split('T')[0];
-                inputFechaCita.value = hoyStr;
-                fechaSeleccionada = hoyStr;
-              }
-              servicioActual = { nombre: '', precio: 0, duracion: '' };
-              cargarHorariosDisponibles();
-              actualizarResumen();
-            }, 15000);
-          } else {
-            alert('Error: ' + data.message);
-          }
-        } catch (e) {
+    setTimeout(() => {
+      form.reset();
+      if (mensajeConfirmacion) mensajeConfirmacion.classList.remove('show');
+      if (servicioSelect) servicioSelect.selectedIndex = 0;
+      if (inputFechaCita) {
+        const hoyStr = new Date().toISOString().split('T')[0];
+        inputFechaCita.value = hoyStr;
+        fechaSeleccionada = hoyStr;
+      }
+      servicioActual = { nombre: '', precio: 0, duracion: '' };
+      cargarHorariosDisponibles();
+      actualizarResumen();
+    }, 15000);
+  } else {
+    alert('Error: ' + data.message);
+  }
+}catch (e) {
           console.error("El servidor devolvió HTML en lugar de JSON:", texto);
           alert('Hubo un error en el archivo PHP. Revisa la consola con F12.');
         }
