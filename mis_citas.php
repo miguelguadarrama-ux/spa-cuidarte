@@ -412,20 +412,20 @@ foreach ($citas as $item) {
                                 </div>
                             <?php endif; ?>
 
-                            <?php if ($permiteSubirComprobante): ?>
-                                <form method="POST" enctype="multipart/form-data" class="form-comprobante">
-                                    <input type="hidden" name="id_cita_comprobante" value="<?= (int)$cita['id_cita'] ?>">
-                                    <select name="tipo_abono">
-                                        <option value="restante">Cubrir restante ($<?= number_format($restante > 0 ? $restante : $total, 2) ?>)</option>
-                                        <option value="completo">Registrar pago completo ($<?= number_format($total, 2) ?>)</option>
-                                    </select>
-                                    <input type="file" name="comprobante" accept="image/*,application/pdf" required>
-                                    <button type="submit" class="btn-subir-comp">
-                                        <i class="fas fa-upload"></i> Subir comprobante
-                                    </button>
-                                    <span class="nota-validacion">Al enviarlo, tu cita quedará pendiente y será aprobada por administración.</span>
-                                </form>
-                            <?php endif; ?>
+                           <?php if ($permiteSubirComprobante): ?>
+    <form method="POST" enctype="multipart/form-data" class="form-comprobante">
+        <input type="hidden" name="id_cita_comprobante" value="<?= (int)$cita['id_cita'] ?>">
+        <input type="hidden" name="tipo_abono" value="restante">
+        <div style="font-size: 0.85rem; font-weight: 600; color: #3a1e3a;">
+            Cubrir restante: $<?= number_format($restante > 0 ? $restante : $total, 2) ?>
+        </div>
+        <input type="file" name="comprobante" accept="image/*,application/pdf" required>
+        <button type="submit" class="btn-subir-comp">
+            <i class="fas fa-upload"></i> Subir comprobante
+        </button>
+        <span class="nota-validacion">Al enviarlo, tu cita quedará pendiente y será aprobada por administración.</span>
+    </form>
+<?php endif; ?>
                         </div>
                     </article>
                 <?php endforeach; ?>
